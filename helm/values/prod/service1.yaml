@@ -1,0 +1,51 @@
+# Service1 configuration for production environment
+name: service1
+environment: prod
+
+replicaCount: 3
+
+image:
+  repository: client/service1
+  tag: "1.0.0"
+
+service:
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/group.name: client-prod
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:region:account-id:certificate/cert-id"
+    alb.ingress.kubernetes.io/ssl-policy: "ELBSecurityPolicy-TLS-1-2-2017-01"
+  hosts:
+    - host: api.example.com
+      paths:
+        - path: /service1
+          pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 75
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+env:
+  - name: NODE_ENV
+    value: production
+  - name: LOG_LEVEL
+    value: info
+  - name: SERVICE_VERSION
+    value: "1.0.0"
+
+# Redis connection info
+envFromSecret: "service1-secrets-prod" 

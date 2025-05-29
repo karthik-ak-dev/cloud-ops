@@ -1,0 +1,48 @@
+# Service2 configuration for dev environment
+name: service2
+environment: dev
+
+replicaCount: 2
+
+image:
+  repository: client/service2
+  tag: "latest"
+
+service:
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/group.name: client-dev
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+  hosts:
+    - host: api-dev.example.com
+      paths:
+        - path: /service2
+          pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 400m
+    memory: 384Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  - name: NODE_ENV
+    value: development
+  - name: LOG_LEVEL
+    value: debug
+  - name: SERVICE_VERSION
+    value: "1.0.0"
+
+# Redis connection info
+envFromSecret: "service2-secrets" 

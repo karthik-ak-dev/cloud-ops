@@ -1,0 +1,116 @@
+name: Update and Deploy Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service name to update and deploy'
+        required: true
+        type: string
+      environment:
+        description: 'Environment (dev, staging, prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: 'dev'
+      image_tag:
+        description: 'New Docker image tag'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: us-east-1  # Update with your AWS region
+
+jobs:
+  update-and-deploy:
+    name: Update Helm Values and Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      # Install yq for YAML processing
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.30.8/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+      
+      # Update Helm values file with new image tag
+      - name: Update Helm values
+        run: |
+          # Update the image tag in the values file
+          cd helm/values/${{ github.event.inputs.environment }}
+          
+          # Ensure file exists
+          if [ ! -f "${{ github.event.inputs.service }}.yaml" ]; then
+            echo "Error: Values file for service ${{ github.event.inputs.service }} does not exist."
+            exit 1
+          fi
+          
+          # Update the image.tag field while preserving the file format
+          yq e ".image.tag = \"${{ github.event.inputs.image_tag }}\"" -i ${{ github.event.inputs.service }}.yaml
+          
+          # Commit and push the updated values file
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add ${{ github.event.inputs.service }}.yaml
+          git commit -m "ci: update ${{ github.event.inputs.service }} image to ${{ github.event.inputs.image_tag }}" || echo "No changes to commit"
+          git push
+      
+      # Install Helm
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.10.0
+      
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      # Configure kubectl
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name client-eks-cluster  # Replace with your cluster name
+      
+      # Deploy service with Helm
+      - name: Deploy with Helm
+        run: |
+          SERVICE="${{ github.event.inputs.service }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          
+          echo "Deploying $SERVICE to $ENVIRONMENT environment"
+          
+          # Check if this is an update or initial deployment
+          if helm status $SERVICE-$ENVIRONMENT >/dev/null 2>&1; then
+            # Update existing deployment
+            helm upgrade $SERVICE-$ENVIRONMENT ./helm/charts/microservice -f ./helm/values/$ENVIRONMENT/$SERVICE.yaml
+          else
+            # Initial deployment
+            helm install $SERVICE-$ENVIRONMENT ./helm/charts/microservice -f ./helm/values/$ENVIRONMENT/$SERVICE.yaml
+          fi
+      
+      # Verify deployment
+      - name: Verify deployment
+        run: |
+          SERVICE="${{ github.event.inputs.service }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          
+          # Wait for deployment to stabilize
+          kubectl rollout status deployment/$SERVICE-$ENVIRONMENT --timeout=180s || true
+          
+          # Get pod status
+          kubectl get pods -l app.kubernetes.io/name=$SERVICE
+          
+          # Get service status
+          kubectl get svc -l app.kubernetes.io/name=$SERVICE
+          
+          # Get ingress status if enabled
+          kubectl get ingress -l app.kubernetes.io/name=$SERVICE || true 

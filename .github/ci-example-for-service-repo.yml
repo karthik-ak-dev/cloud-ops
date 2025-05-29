@@ -1,0 +1,96 @@
+name: Build and Publish
+
+# This is an EXAMPLE CI workflow for a service repository
+# Place this in the .github/workflows directory of your service repository
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  AWS_REGION: us-east-1  # Update with your AWS region
+  INFRA_REPO: owner/infrastructure-repo  # Replace with your infrastructure repo
+  SERVICE_NAME: example-service  # Replace with your service name
+
+jobs:
+  build-and-publish:
+    name: Build and Publish to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      # Set up environment for building (Node.js, Java, etc.)
+      - name: Set up environment
+        uses: actions/setup-node@v3  # Example for Node.js
+        with:
+          node-version: '18'
+      
+      # Determine the environment (dev, staging, prod)
+      - name: Determine environment
+        id: determine-env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+      
+      # Generate image tag from commit SHA
+      - name: Generate image tag
+        id: vars
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "image_tag=$(date +%Y%m%d)-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      
+      # Run tests
+      # - name: Run tests
+      #   run: |
+      #     npm ci
+      #     npm test
+      
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      # Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      # Build, tag, and push Docker image to ECR
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: client/${{ env.SERVICE_NAME }}  # Replace 'client' with your organization name
+          IMAGE_TAG: ${{ steps.vars.outputs.image_tag }}
+        run: |
+          # Build Docker image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          # Push Docker image to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # Save the image tag for the next step
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+      
+      # Trigger deployment in the infrastructure repository
+      - name: Trigger deployment
+        env:
+          ENVIRONMENT: ${{ steps.determine-env.outputs.environment }}
+          GH_TOKEN: ${{ secrets.INFRA_REPO_TOKEN }}
+        run: |
+          # Trigger the workflow in the infrastructure repository
+          curl -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ env.INFRA_REPO }}/actions/workflows/update-and-deploy.yml/dispatches \
+            -d "{\"ref\":\"main\",\"inputs\":{\"service\":\"${{ env.SERVICE_NAME }}\",\"environment\":\"$ENVIRONMENT\",\"image_tag\":\"$IMAGE_TAG\"}}" 

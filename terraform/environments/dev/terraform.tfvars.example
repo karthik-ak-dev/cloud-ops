@@ -1,0 +1,28 @@
+# Client-specific configuration
+project_name = "client"
+region       = "us-east-1"
+vpc_cidr     = "10.0.0.0/16"
+
+# Feature flags
+deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
+deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
+
+# Redis Configuration
+redis_node_type  = "cache.t3.small"
+redis_node_count = 2
+redis_auth_token = "your-redis-auth-token-here"
+
+# Aurora PostgreSQL Configuration
+postgres_instance_class = "db.t3.medium"
+postgres_instance_count = 2
+postgres_engine_version = "13.7"
+postgres_database_name  = "application"
+postgres_master_username = "postgres"
+postgres_master_password = "your-strong-password-here"
+
+# EKS Configuration
+kubernetes_version   = "1.28"
+eks_instance_type    = "t3.medium"
+eks_desired_capacity = 2
+eks_max_capacity     = 4
+eks_min_capacity     = 1 
