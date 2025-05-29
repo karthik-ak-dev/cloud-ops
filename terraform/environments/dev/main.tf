@@ -49,7 +49,7 @@ module "redis" {
   project_name     = var.project_name
   vpc_id           = module.vpc.vpc_id
   vpc_cidr         = var.vpc_cidr
-  private_subnet_id = module.vpc.private_subnet_id
+  private_subnet_id = module.vpc.private_subnet_ids[0]
   node_type        = var.redis_node_type
   node_count       = var.redis_node_count
   auth_token       = var.redis_auth_token
@@ -65,8 +65,8 @@ module "aurora_postgres" {
   project_name      = var.project_name
   vpc_id            = module.vpc.vpc_id
   vpc_cidr          = var.vpc_cidr
-  private_subnet_id = module.vpc.private_subnet_id
-  secondary_subnet_id = module.vpc.private_subnet_id_2
+  private_subnet_id = module.vpc.private_subnet_ids[0]
+  secondary_subnet_id = module.vpc.private_subnet_ids[1]
   
   instance_class    = var.postgres_instance_class
   instance_count    = var.postgres_instance_count
@@ -75,7 +75,7 @@ module "aurora_postgres" {
   master_username   = var.postgres_master_username
   master_password   = var.postgres_master_password
   
-  availability_zones = ["${var.region}b", "${var.region}c"]
+  availability_zones = ["${var.region}a", "${var.region}b"]
 
   depends_on = [module.vpc]
 }
@@ -86,8 +86,8 @@ module "eks" {
 
   project_name      = var.project_name
   vpc_id            = module.vpc.vpc_id
-  public_subnet_id  = module.vpc.public_subnet_id
-  private_subnet_id = module.vpc.private_subnet_id
+  public_subnet_id  = module.vpc.public_subnet_ids[0]
+  private_subnet_id = module.vpc.private_subnet_ids[0]
   kubernetes_version = var.kubernetes_version
   instance_type     = var.eks_instance_type
   desired_capacity  = var.eks_desired_capacity

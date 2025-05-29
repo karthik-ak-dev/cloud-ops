@@ -8,43 +8,68 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Public subnet
+# -----------------------------------------------------------------------
+# Subnet Configuration for Kubernetes Load Balancers
+# -----------------------------------------------------------------------
+# The special tags on these subnets control where AWS Load Balancer Controller 
+# places load balancers when Kubernetes services request them:
+#
+# 1. PUBLIC SUBNETS with "kubernetes.io/role/elb" = "1":
+#    - Used for internet-facing load balancers
+#    - Example Kubernetes service:
+#      apiVersion: v1
+#      kind: Service
+#      metadata:
+#        name: frontend-service
+#      spec:
+#        type: LoadBalancer
+#        ports:
+#        - port: 80
+#        selector:
+#          app: frontend
+#
+# 2. PRIVATE SUBNETS with "kubernetes.io/role/internal-elb" = "1":
+#    - Used for internal-only load balancers
+#    - Example Kubernetes service:
+#      apiVersion: v1
+#      kind: Service
+#      metadata:
+#        name: backend-service
+#        annotations:
+#          service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+#      spec:
+#        type: LoadBalancer
+#        ports:
+#        - port: 80
+#        selector:
+#          app: backend
+# -----------------------------------------------------------------------
+
+# Public subnets
 resource "aws_subnet" "public" {
+  count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidr
+  cidr_block              = var.public_subnet_cidrs[count.index]
   map_public_ip_on_launch = true
-  availability_zone       = "${var.region}a"
+  availability_zone       = "${var.region}${var.availability_zones[count.index]}"
 
   tags = {
-    Name                                           = "${var.project_name}-public-subnet"
+    Name                                           = "${var.project_name}-public-subnet-${var.availability_zones[count.index]}"
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
     "kubernetes.io/role/elb"                       = "1"
   }
 }
 
-# Private subnet
+# Private subnets
 resource "aws_subnet" "private" {
+  count                   = length(var.private_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.private_subnet_cidr
+  cidr_block              = var.private_subnet_cidrs[count.index]
   map_public_ip_on_launch = false
-  availability_zone       = "${var.region}b"
+  availability_zone       = "${var.region}${var.availability_zones[count.index]}"
 
   tags = {
-    Name                                           = "${var.project_name}-private-subnet"
-    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"              = "1"
-  }
-}
-
-# Secondary private subnet (for RDS)
-resource "aws_subnet" "private_2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.private_subnet_cidr_2
-  map_public_ip_on_launch = false
-  availability_zone       = "${var.region}c"
-
-  tags = {
-    Name                                           = "${var.project_name}-private-subnet-2"
+    Name                                           = "${var.project_name}-private-subnet-${var.availability_zones[count.index]}"
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
     "kubernetes.io/role/internal-elb"              = "1"
   }
@@ -71,7 +96,7 @@ resource "aws_eip" "nat" {
 # NAT Gateway
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
+  subnet_id     = aws_subnet.public[0].id
 
   tags = {
     Name = "${var.project_name}-nat"
@@ -80,7 +105,7 @@ resource "aws_nat_gateway" "nat" {
   depends_on = [aws_internet_gateway.igw]
 }
 
-# Route table for public subnet
+# Route table for public subnets
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -94,7 +119,7 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Route table for private subnet
+# Route table for private subnets
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
@@ -108,20 +133,16 @@ resource "aws_route_table" "private" {
   }
 }
 
-# Route table association for public subnet
+# Route table association for public subnets
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
+  count          = length(var.public_subnet_cidrs)
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Route table association for private subnet
+# Route table association for private subnets
 resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
-}
-
-# Route table association for secondary private subnet
-resource "aws_route_table_association" "private_2" {
-  subnet_id      = aws_subnet.private_2.id
+  count          = length(var.private_subnet_cidrs)
+  subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 } 
