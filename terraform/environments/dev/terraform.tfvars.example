@@ -1,11 +1,12 @@
 # Client-specific configuration
-project_name = "client"
+project_name = "dev-client-name"  # Replace client-name with your client name
 region       = "us-east-1"
 vpc_cidr     = "10.0.0.0/16"
 
 # Feature flags
 deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
 deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
+deploy_ecr = true     # Set to false to skip ECR repositories deployment
 
 # Redis Configuration
 redis_node_type  = "cache.t3.small"
@@ -16,7 +17,7 @@ redis_auth_token = "your-redis-auth-token-here"
 postgres_instance_class = "db.t3.medium"
 postgres_instance_count = 2
 postgres_engine_version = "13.7"
-postgres_database_name  = "application"
+postgres_database_name  = "postgres-db"
 postgres_master_username = "postgres"
 postgres_master_password = "your-strong-password-here"
 

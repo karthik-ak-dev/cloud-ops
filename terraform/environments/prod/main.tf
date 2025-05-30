@@ -1,12 +1,11 @@
 # S3 backend configuration - Terraform state is stored here
-# Note: Using a different state file path for production
 terraform {
   backend "s3" {
-    bucket         = "platform-terraform-state"
+    bucket         = "prod-client-name-terraform-state"
     key            = "prod/terraform.tfstate"  # Different state file for prod
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "platform-terraform-locks"
+    dynamodb_table = "terraform-state-locks-ddb"
   }
 }
 
@@ -47,13 +46,13 @@ module "redis" {
   count  = var.deploy_redis ? 1 : 0
   source = "../../modules/redis"
 
-  project_name     = var.project_name
-  vpc_id           = module.vpc.vpc_id
-  vpc_cidr         = var.vpc_cidr
-  private_subnet_id = module.vpc.private_subnet_id
-  node_type        = var.redis_node_type
-  node_count       = var.redis_node_count
-  auth_token       = var.redis_auth_token
+  project_name      = var.project_name
+  vpc_id            = module.vpc.vpc_id
+  vpc_cidr          = var.vpc_cidr
+  private_subnet_ids = module.vpc.private_subnet_ids
+  node_type         = var.redis_node_type
+  node_count        = var.redis_node_count
+  auth_token        = var.redis_auth_token
 
   depends_on = [module.vpc]
 }
@@ -63,11 +62,10 @@ module "aurora_postgres" {
   count  = var.deploy_aurora ? 1 : 0
   source = "../../modules/aurora-postgres"
 
-  project_name      = var.project_name
-  vpc_id            = module.vpc.vpc_id
-  vpc_cidr          = var.vpc_cidr
-  private_subnet_id = module.vpc.private_subnet_id
-  secondary_subnet_id = module.vpc.private_subnet_id_2
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
+  vpc_cidr           = var.vpc_cidr
+  private_subnet_ids = module.vpc.private_subnet_ids
   
   instance_class    = var.postgres_instance_class
   instance_count    = var.postgres_instance_count
@@ -76,7 +74,7 @@ module "aurora_postgres" {
   master_username   = var.postgres_master_username
   master_password   = var.postgres_master_password
   
-  availability_zones = ["${var.region}b", "${var.region}c"]
+  availability_zones = ["${var.region}a", "${var.region}b"]
 
   depends_on = [module.vpc]
 }
@@ -85,15 +83,15 @@ module "aurora_postgres" {
 module "eks" {
   source = "../../modules/eks"
 
-  project_name      = var.project_name
-  vpc_id            = module.vpc.vpc_id
-  public_subnet_id  = module.vpc.public_subnet_id
-  private_subnet_id = module.vpc.private_subnet_id
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  private_subnet_ids = module.vpc.private_subnet_ids
   kubernetes_version = var.kubernetes_version
-  instance_type     = var.eks_instance_type
-  desired_capacity  = var.eks_desired_capacity
-  max_capacity      = var.eks_max_capacity
-  min_capacity      = var.eks_min_capacity
+  instance_type      = var.eks_instance_type
+  desired_capacity   = var.eks_desired_capacity
+  max_capacity       = var.eks_max_capacity
+  min_capacity       = var.eks_min_capacity
 
   depends_on = [module.vpc]
 }

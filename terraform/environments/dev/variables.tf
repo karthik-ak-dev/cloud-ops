@@ -1,7 +1,6 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "client-platform"
 }
 
 variable "region" {
@@ -95,7 +94,7 @@ variable "postgres_engine_version" {
 variable "postgres_database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "client-platform-postgres"
+  default     = "postgres-db"
 }
 
 variable "postgres_master_username" {

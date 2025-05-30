@@ -1,11 +1,11 @@
 # S3 backend configuration - Terraform state is stored here
 terraform {
   backend "s3" {
-    bucket         = "platform-terraform-state"
+    bucket         = "dev-client-name-terraform-state"
     key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "platform-terraform-locks"
+    dynamodb_table = "terraform-state-locks-ddb"
   }
 }
 

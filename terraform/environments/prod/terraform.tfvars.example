@@ -1,36 +1,29 @@
 # Client-specific configuration
-project_name = "client-name"  # Replace with your client name
+project_name = "prod-client-name"  # Replace client-name with your client name
 region       = "us-east-1"
+vpc_cidr     = "10.0.0.0/16"
 
-# Feature flags - Enable/disable components
-deploy_aurora = true
-deploy_redis = true
-deploy_ecr = true
+# Feature flags
+deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
+deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
+deploy_ecr = true     # Set to false to skip ECR repositories deployment
 
-# Redis Configuration - Production grade
-redis_node_type = "cache.m5.large"
+# Redis Configuration
+redis_node_type  = "cache.m5.large"
 redis_node_count = 3
 redis_auth_token = "your-strong-redis-password"  # CHANGE THIS
 
-# ECR Configuration
-ecr_repository_names = ["api", "frontend", "worker"]
-ecr_max_image_count = 50
-ecr_scan_on_push = true
-
-# Aurora PostgreSQL Configuration - Production grade
+# Aurora PostgreSQL Configuration
 postgres_instance_class = "db.r5.large"
 postgres_instance_count = 3
 postgres_engine_version = "13.7"
-postgres_database_name = "client_prod"
+postgres_database_name  = "postgres-db"
 postgres_master_username = "postgres"
 postgres_master_password = "your-strong-db-password"  # CHANGE THIS
 
-# EKS Configuration - Production grade
-kubernetes_version = "1.28"
-eks_instance_type = "m5.large"
+# EKS Configuration
+kubernetes_version   = "1.28"
+eks_instance_type    = "m5.large"
 eks_desired_capacity = 3
-eks_max_capacity = 6
-eks_min_capacity = 2
-
-# Additional production-specific settings
-# vpc_cidr = "10.1.0.0/16"  # Use a different CIDR range from dev if needed 
+eks_max_capacity     = 6
+eks_min_capacity     = 2 

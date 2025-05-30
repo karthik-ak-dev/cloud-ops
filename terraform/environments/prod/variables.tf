@@ -1,7 +1,6 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "client-platform"
 }
 
 variable "region" {
@@ -35,17 +34,17 @@ variable "deploy_ecr" {
   default     = true
 }
 
-# Redis variables - Production grade
+# Redis variables
 variable "redis_node_type" {
   description = "ElastiCache node type"
   type        = string
-  default     = "cache.m5.large"  # Production-grade instance
+  default     = "cache.m5.large"
 }
 
 variable "redis_node_count" {
   description = "Number of Redis nodes"
   type        = number
-  default     = 3  # More nodes for production
+  default     = 3
 }
 
 variable "redis_auth_token" {
@@ -64,7 +63,7 @@ variable "ecr_repository_names" {
 variable "ecr_max_image_count" {
   description = "Maximum number of images to keep in each repository"
   type        = number
-  default     = 50  # Keep more images in production
+  default     = 50
 }
 
 variable "ecr_scan_on_push" {
@@ -73,17 +72,17 @@ variable "ecr_scan_on_push" {
   default     = true
 }
 
-# Aurora PostgreSQL variables - Production grade
+# Aurora PostgreSQL variables
 variable "postgres_instance_class" {
   description = "Instance class for Aurora PostgreSQL"
   type        = string
-  default     = "db.r5.large"  # Production-grade instance
+  default     = "db.r5.large"
 }
 
 variable "postgres_instance_count" {
   description = "Number of Aurora PostgreSQL instances"
   type        = number
-  default     = 3  # More instances for production
+  default     = 3
 }
 
 variable "postgres_engine_version" {
@@ -95,7 +94,7 @@ variable "postgres_engine_version" {
 variable "postgres_database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "client-platform-postgres"
+  default     = "postgres-db"
 }
 
 variable "postgres_master_username" {
@@ -110,7 +109,7 @@ variable "postgres_master_password" {
   sensitive   = true
 }
 
-# EKS variables - Production grade
+# EKS variables
 variable "kubernetes_version" {
   description = "Kubernetes version"
   type        = string
@@ -120,23 +119,23 @@ variable "kubernetes_version" {
 variable "eks_instance_type" {
   description = "Instance type for the EKS nodes"
   type        = string
-  default     = "m5.large"  # Production-grade instance
+  default     = "m5.large"
 }
 
 variable "eks_desired_capacity" {
   description = "Desired number of worker nodes"
   type        = number
-  default     = 3  # More nodes for production
+  default     = 3
 }
 
 variable "eks_max_capacity" {
   description = "Maximum number of worker nodes"
   type        = number
-  default     = 6  # Higher scaling limit for production
+  default     = 6
 }
 
 variable "eks_min_capacity" {
   description = "Minimum number of worker nodes"
   type        = number
-  default     = 2  # Higher minimum for production
+  default     = 2
 } 
