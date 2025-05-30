@@ -1,38 +1,54 @@
 # Providers Module
 
-This module centralizes provider configurations for AWS, Kubernetes, and Helm to avoid duplication across environments.
+This module centralizes provider version requirements to ensure consistency across environments. It no longer contains actual provider configurations, as those are now defined in each environment's root module.
 
 ## Usage
 
 ```hcl
-# Before EKS is created
+# Import provider versions in each environment
 module "providers" {
   source = "../../modules/providers"
+}
+
+# Then define actual provider configurations in the root module
+provider "aws" {
   region = var.region
 }
 
-# After EKS is created
-module "providers" {
-  source                               = "../../modules/providers"
-  region                               = var.region
-  eks_cluster_endpoint                 = module.eks.cluster_endpoint
-  eks_cluster_certificate_authority_data = module.eks.cluster_certificate_authority_data
-  eks_cluster_name                     = module.eks.cluster_name
+# Conditional Kubernetes and Helm providers when using EKS
+provider "kubernetes" {
+  host = var.deploy_eks ? module.eks[0].cluster_endpoint : ""
+  # ...other configuration...
+  alias = "eks"
+}
+
+provider "helm" {
+  kubernetes {
+    # ...configuration...
+  }
+  alias = "eks"
+}
+
+# Pass providers explicitly to modules that need them
+module "alb_controller" {
+  # ...
+  providers = {
+    kubernetes = kubernetes.eks
+    helm       = helm.eks
+  }
 }
 ```
 
-## Inputs
+## Why This Approach?
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| region | AWS region | string | `"us-east-1"` | no |
-| eks_cluster_endpoint | EKS cluster endpoint | string | `""` | no |
-| eks_cluster_certificate_authority_data | EKS cluster certificate authority data | string | `""` | no |
-| eks_cluster_name | EKS cluster name | string | `""` | no |
+1. **Best Practices**: Keeps provider configurations at the root level following Terraform best practices
+2. **Consistency**: Centralizes provider version requirements to ensure consistency
+3. **Flexibility**: Allows using count/for_each with modules that use providers
+4. **Maintainability**: Clearer dependency structure and easier debugging
 
 ## Notes
 
-- This module should be called twice in each environment:
-  1. At the beginning with just the `region` parameter to configure the AWS provider
-  2. After the EKS module with the EKS outputs to configure the Kubernetes and Helm providers
-- The empty defaults for the EKS variables allow the first call to succeed, as these values are only needed for the second call 
+- This module only defines required_providers, not actual provider configurations
+- Provider blocks should be defined in each environment's root module
+- When using conditional resources (like EKS), provider configurations can use conditionals directly
+- Modules that need specific providers should receive them explicitly via the providers block 

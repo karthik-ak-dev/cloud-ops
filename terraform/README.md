@@ -20,7 +20,7 @@ terraform/
 │   ├── ecr/                # ECR repositories configuration
 │   ├── eks/                # EKS cluster configuration
 │   ├── alb-controller/     # AWS Load Balancer Controller
-│   └── providers/          # Centralized provider configurations
+│   └── providers/          # Centralized provider version requirements
 ├── environments/           # Environment-specific configurations
 │   ├── dev/                # Development environment
 │   └── prod/               # Production environment
@@ -37,13 +37,17 @@ This infrastructure is designed for high availability across multiple AWS Availa
 
 ## Provider Configuration
 
-This infrastructure uses a centralized provider configuration approach:
+This infrastructure follows Terraform best practices for provider management:
 
-- The `providers` module in `modules/providers/` contains all provider configurations
-- Each environment calls this module twice:
-  1. At the beginning to configure the AWS provider
-  2. After the EKS module to configure Kubernetes and Helm providers
-- This approach eliminates duplication and ensures consistency across environments
+- The `providers` module in `modules/providers/` centralizes provider version requirements
+- Actual provider configurations are in each environment's root module (e.g., `environments/dev/main.tf`)
+- Conditional configuration is used for providers that depend on optional resources (like EKS)
+- Explicit provider passing is used for modules that need specific providers (like the ALB controller)
+
+This approach:
+- Follows Terraform's recommendation to keep provider configurations at the root level
+- Enables using `count` and conditionals with modules that need providers
+- Maintains version consistency across environments
 
 ## Creating a New Environment
 
@@ -276,4 +280,87 @@ terraform destroy
 - The Aurora PostgreSQL cluster is deployed with multiple instances across different availability zones for high availability.
 - The EKS cluster is deployed with worker nodes in the private subnets across multiple AZs.
 - The NAT Gateway enables resources in the private subnet to access the internet.
-- The AWS Load Balancer Controller creates ALBs for your services based on Ingress resources. 
+- The AWS Load Balancer Controller creates ALBs for your services based on Ingress resources.
+
+# Provider Architecture
+
+This repository follows Terraform best practices for provider management:
+
+## Key Principles
+
+1. **Provider Versions Centralization**: The `modules/providers` module centralizes provider version requirements to ensure consistency across environments.
+
+2. **Root Module Provider Configuration**: Actual provider configurations are defined in each environment's root module (e.g., `environments/dev/main.tf`).
+
+3. **Conditional Provider Configuration**: For providers that depend on optional resources (like EKS), we use conditional configuration.
+
+4. **Explicit Provider Passing**: Providers are explicitly passed to modules that need them.
+
+## Implementation Details
+
+### 1. Provider Versions Module
+
+The `modules/providers` module contains only provider version requirements:
+
+```hcl
+terraform {
+  required_providers {
+    aws = { source = "hashicorp/aws", version = "~> 5.0" }
+    kubernetes = { source = "hashicorp/kubernetes", version = "~> 2.23" }
+    helm = { source = "hashicorp/helm", version = "~> 2.11" }
+  }
+}
+```
+
+### 2. Root Module Provider Configuration
+
+In each environment, we import the provider versions and configure providers:
+
+```hcl
+# Import provider versions
+module "providers" {
+  source = "../../modules/providers"
+}
+
+# Configure AWS provider
+provider "aws" {
+  region = var.region
+}
+
+# Conditional Kubernetes/Helm providers for EKS
+provider "kubernetes" {
+  host = var.deploy_eks ? module.eks[0].cluster_endpoint : ""
+  # ... other configuration ...
+  alias = "eks"
+}
+```
+
+### 3. Pass Providers to Modules
+
+For modules that need specific providers (like the ALB controller):
+
+```hcl
+module "alb_controller" {
+  # ... other configuration ...
+  
+  providers = {
+    kubernetes = kubernetes.eks
+    helm = helm.eks
+  }
+}
+```
+
+### 4. Module Required Providers
+
+Modules that use providers declare their requirements:
+
+```hcl
+terraform {
+  required_providers {
+    kubernetes = { source = "hashicorp/kubernetes" }
+    helm = { source = "hashicorp/helm" }
+  }
+}
+```
+
+This architecture allows for optional deployment of components like EKS while following Terraform best practices for provider management. 

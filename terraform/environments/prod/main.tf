@@ -9,17 +9,17 @@ terraform {
   }
 }
 
-# Phase 1: Configure AWS provider
-# This first call to the providers module only effectively initializes the AWS provider
-# The Kubernetes and Helm providers are also defined but aren't used yet because:
-# - Their required parameters are empty strings
-# - No Kubernetes resources have been created
-module "providers_aws" {
+# Import provider versions from the providers module
+module "providers" {
   source = "../../modules/providers"
+}
+
+# AWS provider configuration
+provider "aws" {
   region = var.region
 }
 
-# Phase 2: Create AWS infrastructure using the AWS provider
+# Phase 1: Create AWS infrastructure
 # VPC is required by most other resources
 module "vpc" {
   source = "../../modules/vpc"
@@ -97,24 +97,56 @@ module "eks" {
   depends_on = [module.vpc]
 }
 
-# Phase 3: Configure Kubernetes and Helm providers (only if EKS is enabled)
-# This second call to the providers module initializes the Kubernetes and Helm providers
-# Now that the EKS cluster exists, we can use its outputs to configure the providers
-module "providers_k8s" {
-  count  = var.deploy_eks ? 1 : 0
-  source = "../../modules/providers"
-  
-  region                               = var.region
-  eks_cluster_endpoint                 = module.eks[0].cluster_endpoint
-  eks_cluster_certificate_authority_data = module.eks[0].cluster_certificate_authority_data
-  eks_cluster_name                     = module.eks[0].cluster_name
-
-  depends_on = [module.eks]  # This ensures EKS exists before trying to configure K8s providers
+# Create locals for EKS outputs or empty values if EKS is not deployed
+locals {
+  eks_cluster_endpoint = var.deploy_eks ? (length(module.eks) > 0 ? module.eks[0].cluster_endpoint : "") : ""
+  eks_cluster_certificate_authority_data = var.deploy_eks ? (length(module.eks) > 0 ? module.eks[0].cluster_certificate_authority_data : "") : ""
+  eks_cluster_name = var.deploy_eks ? (length(module.eks) > 0 ? module.eks[0].cluster_name : "") : ""
 }
 
-# Phase 4: Optional: Deploy ALB controller if enabled (and if EKS is enabled)
-# The ALB controller is deployed using Helm
-# It implicitly uses the Helm provider configured in the providers_k8s module
+# Phase 2: Configure Kubernetes and Helm providers for EKS-dependent resources
+
+# Conditional Kubernetes provider configuration
+provider "kubernetes" {
+  host                   = local.eks_cluster_endpoint
+  cluster_ca_certificate = local.eks_cluster_certificate_authority_data != "" ? base64decode(local.eks_cluster_certificate_authority_data) : null
+  
+  dynamic "exec" {
+    for_each = local.eks_cluster_name != "" ? [1] : []
+    content {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", local.eks_cluster_name]
+      command     = "aws"
+    }
+  }
+  
+  # Skip this provider configuration when EKS is not deployed
+  alias = "eks"
+}
+
+# Conditional Helm provider configuration
+provider "helm" {
+  kubernetes {
+    host                   = local.eks_cluster_endpoint
+    cluster_ca_certificate = local.eks_cluster_certificate_authority_data != "" ? base64decode(local.eks_cluster_certificate_authority_data) : null
+    
+    dynamic "exec" {
+      for_each = local.eks_cluster_name != "" ? [1] : []
+      content {
+        api_version = "client.authentication.k8s.io/v1beta1"
+        args        = ["eks", "get-token", "--cluster-name", local.eks_cluster_name]
+        command     = "aws"
+      }
+    }
+  }
+  
+  # Skip this provider configuration when EKS is not deployed
+  alias = "eks"
+}
+
+# Phase 3: Deploy EKS-dependent resources
+
+# Optional: Deploy ALB controller if enabled (and if EKS is enabled)
 module "alb_controller" {
   count  = var.deploy_eks && var.deploy_alb_controller ? 1 : 0
   source = "../../modules/alb-controller"
@@ -124,6 +156,11 @@ module "alb_controller" {
   region        = var.region
   vpc_id        = module.vpc.vpc_id
 
-  # This ensures both the EKS cluster and the K8s providers exist before deploying
-  depends_on = [module.eks, module.providers_k8s]
+  # Explicitly pass providers to the module
+  providers = {
+    kubernetes = kubernetes.eks
+    helm       = helm.eks
+  }
+
+  depends_on = [module.eks]
 } 

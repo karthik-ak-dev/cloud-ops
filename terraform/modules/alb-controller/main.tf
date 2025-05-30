@@ -8,6 +8,19 @@
 # The deployment uses IAM Roles for Service Accounts (IRSA) to securely
 # provide AWS permissions to the controller without storing credentials.
 
+# Required providers declaration - this allows explicit provider passing from root module
+# Note: Version constraints are centralized in the providers module
+terraform {
+  required_providers {
+    kubernetes = {
+      source = "hashicorp/kubernetes"
+    }
+    helm = {
+      source = "hashicorp/helm"
+    }
+  }
+}
+
 # ---------------------------------------------------------------------
 # KUBERNETES SERVICE ACCOUNT WITH IAM ROLE
 # ---------------------------------------------------------------------
