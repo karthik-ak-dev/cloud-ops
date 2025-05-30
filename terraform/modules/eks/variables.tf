@@ -8,14 +8,14 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "public_subnet_id" {
-  description = "ID of the public subnet"
-  type        = string
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  type        = list(string)
 }
 
-variable "private_subnet_id" {
-  description = "ID of the private subnet"
-  type        = string
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
 }
 
 variable "kubernetes_version" {

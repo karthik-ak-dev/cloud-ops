@@ -83,15 +83,15 @@ module "aurora_postgres" {
 module "eks" {
   source = "../../modules/eks"
 
-  project_name      = var.project_name
-  vpc_id            = module.vpc.vpc_id
-  public_subnet_id  = module.vpc.public_subnet_ids[0]
-  private_subnet_id = module.vpc.private_subnet_ids[0]
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  private_subnet_ids = module.vpc.private_subnet_ids
   kubernetes_version = var.kubernetes_version
-  instance_type     = var.eks_instance_type
-  desired_capacity  = var.eks_desired_capacity
-  max_capacity      = var.eks_max_capacity
-  min_capacity      = var.eks_min_capacity
+  instance_type      = var.eks_instance_type
+  desired_capacity   = var.eks_desired_capacity
+  max_capacity       = var.eks_max_capacity
+  min_capacity       = var.eks_min_capacity
 
   depends_on = [module.vpc]
 }
