@@ -51,9 +51,9 @@ Ensure you have the following tools installed on your local machine:
 3. **Create DynamoDB table for state locking** (one-time setup):
 
    ```bash
-   # Replace CLIENT_NAME with your specific client identifier
+   # Create the DynamoDB table for state locking
    aws dynamodb create-table \
-       --table-name ${CLIENT_NAME}-terraform-locks \
+       --table-name terraform-state-locks-ddb \
        --attribute-definitions AttributeName=LockID,AttributeType=S \
        --key-schema AttributeName=LockID,KeyType=HASH \
        --billing-mode PAY_PER_REQUEST \
@@ -82,7 +82,7 @@ Ensure you have the following tools installed on your local machine:
        key            = "dev/terraform.tfstate"
        region         = "us-east-1"
        encrypt        = true
-       dynamodb_table = "${CLIENT_NAME}-terraform-locks"
+       dynamodb_table = "terraform-state-locks-ddb"
      }
    }
    ```
@@ -105,32 +105,31 @@ Ensure you have the following tools installed on your local machine:
    # Client-specific configuration
    project_name = "CLIENT_NAME"  # Replace with your client name
    region       = "us-east-1"
+   vpc_cidr     = "10.0.0.0/16"
    
    # Feature flags
    deploy_aurora = true  # Set to false to skip Aurora PostgreSQL
    deploy_redis = true   # Set to false to skip Redis ElastiCache
    deploy_ecr = true     # Set to false to skip ECR repositories
    
-   # ECR Configuration
-   ecr_repository_names = ["api", "frontend", "worker"]  # Adjust as needed
-   
    # Redis Configuration
-   redis_node_type = "cache.t3.small"  # Development size
+   redis_node_type  = "cache.t3.small"  # Development size
    redis_node_count = 2
    redis_auth_token = "your-strong-redis-password"  # CHANGE THIS
    
    # Aurora PostgreSQL Configuration
    postgres_instance_class = "db.t3.medium"  # Development size
    postgres_instance_count = 2
-   postgres_database_name = "CLIENT_NAME"
+   postgres_database_name  = "postgres-db"
+   postgres_master_username = "postgres"
    postgres_master_password = "your-strong-db-password"  # CHANGE THIS
    
    # EKS Configuration
-   kubernetes_version = "1.28"
-   eks_instance_type = "t3.medium"  # Development size
+   kubernetes_version   = "1.28"
+   eks_instance_type    = "t3.medium"  # Development size
    eks_desired_capacity = 2
-   eks_max_capacity = 4
-   eks_min_capacity = 1
+   eks_max_capacity     = 4
+   eks_min_capacity     = 1
    ```
 
 5. **Initialize Terraform**:
@@ -186,32 +185,31 @@ Ensure you have the following tools installed on your local machine:
    # Client-specific configuration
    project_name = "CLIENT_NAME"  # Replace with your client name
    region       = "us-east-1"
+   vpc_cidr     = "10.0.0.0/16"
    
    # Feature flags
    deploy_aurora = true
    deploy_redis = true
    deploy_ecr = true
    
-   # ECR Configuration
-   ecr_repository_names = ["api", "frontend", "worker"]
-   
    # Redis Configuration
-   redis_node_type = "cache.m5.large"  # Production-grade instance
+   redis_node_type  = "cache.m5.large"  # Production-grade instance
    redis_node_count = 3  # More nodes for production
    redis_auth_token = "your-strong-redis-password"  # CHANGE THIS
    
    # Aurora PostgreSQL Configuration
    postgres_instance_class = "db.r5.large"  # Production-grade instance
    postgres_instance_count = 3  # More instances for production
-   postgres_database_name = "CLIENT_NAME"
+   postgres_database_name  = "postgres-db"
+   postgres_master_username = "postgres"
    postgres_master_password = "your-strong-db-password"  # CHANGE THIS
    
    # EKS Configuration
-   kubernetes_version = "1.28"
-   eks_instance_type = "m5.large"  # Production-grade instance
+   kubernetes_version   = "1.28"
+   eks_instance_type    = "m5.large"  # Production-grade instance
    eks_desired_capacity = 3
-   eks_max_capacity = 6
-   eks_min_capacity = 2
+   eks_max_capacity     = 6
+   eks_min_capacity     = 2
    ```
 
 3. **Initialize, plan, and apply**:
@@ -236,6 +234,29 @@ Ensure you have the following tools installed on your local machine:
 | Node Counts | Fewer (2) | More (3+) |
 | Scaling | Lower capacity | Higher capacity |
 | Backup Policy | Minimal | Comprehensive |
+
+## High Availability Architecture
+
+The infrastructure is designed for high availability across multiple AWS Availability Zones:
+
+1. **VPC Network**:
+   - Public and private subnets spread across multiple AZs
+   - Internet Gateway for public internet access
+   - NAT Gateway for private subnet internet access
+
+2. **Database Layer**:
+   - Aurora PostgreSQL with instances in different AZs
+   - Automatic failover capabilities
+
+3. **Cache Layer**:
+   - Redis ElastiCache with multi-AZ replication
+   - Automatic failover when using multiple nodes
+
+4. **Compute Layer**:
+   - EKS worker nodes distributed across multiple AZs
+   - Auto-scaling capabilities for handling load changes
+
+This multi-AZ approach ensures that your application remains available even if an entire AWS Availability Zone experiences an outage.
 
 ## Microservice Deployment
 
@@ -319,9 +340,29 @@ This project uses a multi-repository approach for CI/CD:
 
    Edit `.github/workflows/ci.yml` to update:
    - `SERVICE_NAME`: The name of your service
+   - `PROJECT_NAME`: The project name that prefixes your ECR repository
    - `INFRA_REPO`: The GitHub repo path to the infrastructure repository
 
-5. **Add GitHub secrets**:
+5. **Update the Docker image tagging** in the workflow:
+
+   ```yaml
+   # Build, tag, and push image to Amazon ECR
+   - name: Build, tag, and push image to Amazon ECR
+     env:
+       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+       ECR_REPOSITORY: ${{ env.PROJECT_NAME }}-services  # Single repository for all services
+       SERVICE_TAG: ${{ env.SERVICE_NAME }}-${{ steps.vars.outputs.image_tag }}
+       LATEST_TAG: ${{ env.SERVICE_NAME }}-latest
+     run: |
+       # Build Docker image
+       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG .
+       
+       # Push Docker image to ECR
+       docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE_TAG
+       docker push $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
+   ```
+
+6. **Add GitHub secrets**:
 
    In your service repository GitHub settings, add these secrets:
    - `AWS_ACCESS_KEY_ID`: AWS access key with ECR permissions
@@ -349,8 +390,8 @@ This project uses a multi-repository approach for CI/CD:
    
    # Container configuration
    image:
-     repository: {AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/client-service1
-     tag: latest
+     repository: {AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/client-name-services
+     tag: service1-latest  # Using service-name prefix in tag
      pullPolicy: Always
    
    # Service configuration
@@ -544,4 +585,16 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controll
 
 # Verify ingress has correct annotations
 kubectl describe ingress <service-name>
+```
+
+### Aurora PostgreSQL Deletion Issues
+
+If you cannot delete Aurora PostgreSQL:
+
+```bash
+# Disable deletion protection before destroying
+terraform apply -var="deletion_protection=false"
+
+# Then you can destroy the infrastructure
+terraform destroy
 ``` 
