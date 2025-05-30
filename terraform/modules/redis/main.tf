@@ -28,14 +28,21 @@ resource "aws_security_group" "redis" {
   }
 }
 
+# Extract major version from the engine_version (e.g., "7.0" -> "7")
+locals {
+  # Get major version number for parameter group family
+  redis_major_version = split(".", var.engine_version)[0]
+}
+
 resource "aws_elasticache_parameter_group" "redis" {
   name   = "${var.project_name}-redis-params"
-  family = "redis6.x"
+  family = "redis${local.redis_major_version}"
 }
 
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id          = "${var.project_name}-redis"
   description                   = "Redis cluster for ${var.project_name}"
+  engine_version                = var.engine_version
   node_type                     = var.node_type
   port                          = 6379
   parameter_group_name          = aws_elasticache_parameter_group.redis.name

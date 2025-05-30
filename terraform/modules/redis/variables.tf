@@ -34,4 +34,10 @@ variable "auth_token" {
   description = "Auth token for Redis"
   type        = string
   sensitive   = true
+}
+
+variable "engine_version" {
+  description = "Redis engine version"
+  type        = string
+  default     = "7.0"
 } 

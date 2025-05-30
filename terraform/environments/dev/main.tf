@@ -53,6 +53,7 @@ module "redis" {
   node_type         = var.redis_node_type
   node_count        = var.redis_node_count
   auth_token        = var.redis_auth_token
+  engine_version    = var.redis_engine_version
 
   depends_on = [module.vpc]
 }

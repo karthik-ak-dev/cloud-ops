@@ -5,8 +5,8 @@ vpc_cidr     = "10.0.0.0/16"
 
 # Feature flags
 deploy_aurora = false  # Set to false to skip Aurora PostgreSQL deployment
-deploy_redis = false   # Set to false to skip Redis ElastiCache deployment
-deploy_ecr = false     # Set to false to skip ECR repositories deployment
+deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
+deploy_ecr = true     # Set to false to skip ECR repositories deployment
 deploy_eks = false     # Set to false to skip EKS cluster deployment
 deploy_alb_controller = false  # Set to false to skip ALB controller deployment
 
@@ -18,7 +18,7 @@ redis_auth_token = "your-redis-auth-token-here"
 # Aurora PostgreSQL Configuration
 postgres_instance_class = "db.t3.medium"
 postgres_instance_count = 1
-postgres_engine_version = "13.7"
+postgres_engine_version = "16.6"
 postgres_database_name  = "postgres-db"
 postgres_master_username = "postgres"
 postgres_master_password = "your-strong-password-here"

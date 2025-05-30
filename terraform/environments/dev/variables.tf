@@ -65,11 +65,17 @@ variable "redis_auth_token" {
   sensitive   = true
 }
 
+variable "redis_engine_version" {
+  description = "Redis engine version"
+  type        = string
+  default     = "7.0"
+}
+
 # ECR variables
 variable "ecr_repository_names" {
   description = "List of ECR repository names to create"
   type        = list(string)
-  default     = ["api", "frontend", "worker"]
+  default     = ["services"]
 }
 
 variable "ecr_max_image_count" {
