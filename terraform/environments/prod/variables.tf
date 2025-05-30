@@ -28,6 +28,12 @@ variable "deploy_redis" {
   default     = true
 }
 
+variable "deploy_valkey_srvless" {
+  description = "Whether to deploy Valkey Serverless"
+  type        = bool
+  default     = true
+}
+
 variable "deploy_ecr" {
   description = "Whether to deploy ECR repositories"
   type        = bool
@@ -69,6 +75,25 @@ variable "redis_engine_version" {
   description = "Redis engine version"
   type        = string
   default     = "7.0"
+}
+
+# Valkey Serverless variables
+variable "valkey_srvless_max_storage_gb" {
+  description = "Maximum storage in GB for Valkey Serverless"
+  type        = number
+  default     = 25
+}
+
+variable "valkey_srvless_max_ecpu_per_second" {
+  description = "Maximum eCPU per second for Valkey Serverless"
+  type        = number
+  default     = 50000
+}
+
+variable "valkey_srvless_auth_token" {
+  description = "Auth token for Valkey Serverless"
+  type        = string
+  sensitive   = true
 }
 
 # ECR variables

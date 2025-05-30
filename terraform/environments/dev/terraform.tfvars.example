@@ -6,6 +6,7 @@ vpc_cidr     = "10.0.0.0/16"
 # Feature flags
 deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
 deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
+deploy_valkey_srvless = true  # Set to false to skip Valkey Serverless deployment
 deploy_ecr = true     # Set to false to skip ECR repositories deployment
 deploy_eks = true     # Set to false to skip EKS cluster deployment
 deploy_alb_controller = true  # Set to false to skip ALB controller deployment
@@ -14,6 +15,11 @@ deploy_alb_controller = true  # Set to false to skip ALB controller deployment
 redis_node_type  = "cache.t3.small"
 redis_node_count = 1
 redis_auth_token = "your-redis-auth-token-here"
+
+# Valkey Serverless Configuration
+valkey_srvless_max_storage_gb = 10
+valkey_srvless_max_ecpu_per_second = 20000
+valkey_srvless_auth_token = "your-valkey-srvless-auth-token-here"
 
 # Aurora PostgreSQL Configuration
 postgres_instance_class = "db.t3.medium"
