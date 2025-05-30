@@ -63,7 +63,7 @@ variable "instance_count" {
 variable "engine_version" {
   description = "Version of the Aurora PostgreSQL engine"
   type        = string
-  default     = "13.7"
+  default     = "16.6"
 }
 
 variable "backup_retention_period" {

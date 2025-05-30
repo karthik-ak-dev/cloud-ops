@@ -73,6 +73,8 @@ module "aurora_postgres" {
   database_name     = var.postgres_database_name
   master_username   = var.postgres_master_username
   master_password   = var.postgres_master_password
+  deletion_protection = var.postgres_deletion_protection
+  skip_final_snapshot = var.postgres_skip_final_snapshot
   
   availability_zones = ["${var.region}a", "${var.region}b"]
 

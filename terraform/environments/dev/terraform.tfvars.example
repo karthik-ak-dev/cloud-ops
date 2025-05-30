@@ -18,7 +18,7 @@ redis_auth_token = "your-redis-auth-token-here"
 # Aurora PostgreSQL Configuration
 postgres_instance_class = "db.t3.medium"
 postgres_instance_count = 1
-postgres_engine_version = "13.7"
+postgres_engine_version = "16.6"
 postgres_database_name  = "postgres-db"
 postgres_master_username = "postgres"
 postgres_master_password = "your-strong-password-here"

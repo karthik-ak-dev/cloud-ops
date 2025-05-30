@@ -100,7 +100,7 @@ variable "postgres_instance_count" {
 variable "postgres_engine_version" {
   description = "Engine version for Aurora PostgreSQL"
   type        = string
-  default     = "13.7"
+  default     = "16.6"
 }
 
 variable "postgres_database_name" {
@@ -119,6 +119,18 @@ variable "postgres_master_password" {
   description = "Master password for the database"
   type        = string
   sensitive   = true
+}
+
+variable "postgres_deletion_protection" {
+  description = "Whether deletion protection is enabled for the Aurora PostgreSQL cluster"
+  type        = bool
+  default     = true
+}
+
+variable "postgres_skip_final_snapshot" {
+  description = "Whether to skip the final snapshot when deleting the Aurora PostgreSQL cluster"
+  type        = bool
+  default     = false
 }
 
 # EKS variables

@@ -32,9 +32,17 @@ resource "aws_security_group" "aurora" {
   }
 }
 
+# Extract major version from the full version string (e.g., "16.6" -> "16")
+# Also handles edge cases like versions without periods (e.g., "16" -> "16")
+locals {
+  # First check if engine_version contains a period, if so split at first period
+  # If not (or if empty), use the entire string as the major version
+  major_version = length(regexall("\\.", var.engine_version)) > 0 ? split(".", var.engine_version)[0] : var.engine_version
+}
+
 resource "aws_rds_cluster_parameter_group" "aurora" {
   name   = "${var.project_name}-aurora-pg-param-group"
-  family = "aurora-postgresql${var.engine_version}"
+  family = "aurora-postgresql${local.major_version}"
 
   parameter {
     name  = "log_statement"

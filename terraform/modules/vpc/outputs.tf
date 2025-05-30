@@ -13,9 +13,15 @@ output "private_subnet_ids" {
   value       = aws_subnet.private[*].id
 }
 
+# Accessing specific subnets if needed
+output "private_subnet_id_1" {
+  description = "ID of the first private subnet"
+  value       = length(aws_subnet.private) > 0 ? aws_subnet.private[0].id : null
+}
+
 output "private_subnet_id_2" {
-  description = "ID of the secondary private subnet"
-  value       = aws_subnet.private_2.id
+  description = "ID of the second private subnet"
+  value       = length(aws_subnet.private) > 1 ? aws_subnet.private[1].id : null
 }
 
 output "public_subnet_cidrs" {
@@ -28,7 +34,13 @@ output "private_subnet_cidrs" {
   value       = aws_subnet.private[*].cidr_block
 }
 
+# Accessing specific subnet CIDRs if needed
+output "private_subnet_cidr_1" {
+  description = "CIDR block of the first private subnet"
+  value       = length(aws_subnet.private) > 0 ? aws_subnet.private[0].cidr_block : null
+}
+
 output "private_subnet_cidr_2" {
-  description = "CIDR block of the secondary private subnet"
-  value       = aws_subnet.private_2.cidr_block
+  description = "CIDR block of the second private subnet"
+  value       = length(aws_subnet.private) > 1 ? aws_subnet.private[1].cidr_block : null
 } 

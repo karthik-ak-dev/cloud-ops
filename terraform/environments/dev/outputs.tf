@@ -59,15 +59,15 @@ output "aurora_master_username" {
 # EKS outputs
 output "eks_cluster_endpoint" {
   description = "EKS cluster endpoint"
-  value       = module.eks.cluster_endpoint
+  value       = var.deploy_eks ? module.eks[0].cluster_endpoint : null
 }
 
 output "eks_cluster_name" {
   description = "EKS cluster name"
-  value       = module.eks.cluster_name
+  value       = var.deploy_eks ? module.eks[0].cluster_name : null
 }
 
 output "eks_config_command" {
   description = "Command to configure kubectl"
-  value       = "aws eks update-kubeconfig --region ${var.region} --name ${module.eks.cluster_name}"
+  value       = var.deploy_eks ? "aws eks update-kubeconfig --region ${var.region} --name ${module.eks[0].cluster_name}" : "EKS cluster not deployed"
 } 

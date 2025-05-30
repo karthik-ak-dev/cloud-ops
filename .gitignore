@@ -25,6 +25,9 @@ terraform.rc
 
 # DO NOT ignore .terraform.lock.hcl files - these should be committed
 
+# Terraform plan files
+*tfplan*
+
 # MacOS specific
 .DS_Store
 
