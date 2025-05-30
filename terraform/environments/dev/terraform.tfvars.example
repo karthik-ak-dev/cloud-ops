@@ -10,12 +10,12 @@ deploy_ecr = true     # Set to false to skip ECR repositories deployment
 
 # Redis Configuration
 redis_node_type  = "cache.t3.small"
-redis_node_count = 2
+redis_node_count = 1
 redis_auth_token = "your-redis-auth-token-here"
 
 # Aurora PostgreSQL Configuration
 postgres_instance_class = "db.t3.medium"
-postgres_instance_count = 2
+postgres_instance_count = 1
 postgres_engine_version = "13.7"
 postgres_database_name  = "postgres-db"
 postgres_master_username = "postgres"
@@ -24,6 +24,6 @@ postgres_master_password = "your-strong-password-here"
 # EKS Configuration
 kubernetes_version   = "1.28"
 eks_instance_type    = "t3.medium"
-eks_desired_capacity = 2
+eks_desired_capacity = 1
 eks_max_capacity     = 4
 eks_min_capacity     = 1 
