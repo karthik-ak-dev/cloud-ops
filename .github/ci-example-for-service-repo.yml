@@ -13,6 +13,7 @@ env:
   AWS_REGION: us-east-1  # Update with your AWS region
   INFRA_REPO: owner/infrastructure-repo  # Replace with your infrastructure repo
   SERVICE_NAME: example-service  # Replace with your service name
+  PROJECT_NAME: client  # Should match the project_name in Terraform
 
 jobs:
   build-and-publish:
@@ -69,18 +70,21 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: client/${{ env.SERVICE_NAME }}  # Replace 'client' with your organization name
-          IMAGE_TAG: ${{ steps.vars.outputs.image_tag }}
+          ECR_REPOSITORY: ${{ env.PROJECT_NAME }}-services  # Matches Terraform: ${var.project_name}-services
+          SERVICE_TAG: ${{ env.SERVICE_NAME }}-${{ steps.vars.outputs.image_tag }}
+          LATEST_TAG: ${{ env.SERVICE_NAME }}-latest
         run: |
           # Build Docker image
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG .
           
           # Push Docker image to ECR
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
           
-          # Save the image tag for the next step
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          # Save variables for the next step
+          echo "IMAGE_TAG=$SERVICE_TAG" >> $GITHUB_ENV
+          echo "REPOSITORY=$ECR_REPOSITORY" >> $GITHUB_ENV
+          echo "REGISTRY=$ECR_REGISTRY" >> $GITHUB_ENV
       
       # Trigger deployment in the infrastructure repository
       - name: Trigger deployment
@@ -93,4 +97,4 @@ jobs:
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ env.INFRA_REPO }}/actions/workflows/update-and-deploy.yml/dispatches \
-            -d "{\"ref\":\"main\",\"inputs\":{\"service\":\"${{ env.SERVICE_NAME }}\",\"environment\":\"$ENVIRONMENT\",\"image_tag\":\"$IMAGE_TAG\"}}" 
+            -d "{\"ref\":\"main\",\"inputs\":{\"service\":\"${{ env.SERVICE_NAME }}\",\"environment\":\"$ENVIRONMENT\",\"image_tag\":\"$IMAGE_TAG\",\"repository\":\"$REPOSITORY\",\"registry\":\"$REGISTRY\"}}" 

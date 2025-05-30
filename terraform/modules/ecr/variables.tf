@@ -4,9 +4,9 @@ variable "project_name" {
 }
 
 variable "repository_names" {
-  description = "List of ECR repository names to create"
+  description = "List of ECR repository names to create. Default is a single 'services' repository where all services can push with different tags (service-name:tag)"
   type        = list(string)
-  default     = ["api", "frontend", "worker"]
+  default     = ["services"]
 }
 
 variable "image_tag_mutability" {
