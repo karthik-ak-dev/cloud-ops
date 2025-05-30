@@ -46,13 +46,13 @@ module "redis" {
   count  = var.deploy_redis ? 1 : 0
   source = "../../modules/redis"
 
-  project_name     = var.project_name
-  vpc_id           = module.vpc.vpc_id
-  vpc_cidr         = var.vpc_cidr
-  private_subnet_id = module.vpc.private_subnet_ids[0]
-  node_type        = var.redis_node_type
-  node_count       = var.redis_node_count
-  auth_token       = var.redis_auth_token
+  project_name      = var.project_name
+  vpc_id            = module.vpc.vpc_id
+  vpc_cidr          = var.vpc_cidr
+  private_subnet_ids = module.vpc.private_subnet_ids
+  node_type         = var.redis_node_type
+  node_count        = var.redis_node_count
+  auth_token        = var.redis_auth_token
 
   depends_on = [module.vpc]
 }
@@ -62,11 +62,10 @@ module "aurora_postgres" {
   count  = var.deploy_aurora ? 1 : 0
   source = "../../modules/aurora-postgres"
 
-  project_name      = var.project_name
-  vpc_id            = module.vpc.vpc_id
-  vpc_cidr          = var.vpc_cidr
-  private_subnet_id = module.vpc.private_subnet_ids[0]
-  secondary_subnet_id = module.vpc.private_subnet_ids[1]
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
+  vpc_cidr           = var.vpc_cidr
+  private_subnet_ids = module.vpc.private_subnet_ids
   
   instance_class    = var.postgres_instance_class
   instance_count    = var.postgres_instance_count

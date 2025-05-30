@@ -13,14 +13,9 @@ variable "vpc_cidr" {
   type        = string
 }
 
-variable "private_subnet_id" {
-  description = "ID of the primary private subnet"
-  type        = string
-}
-
-variable "secondary_subnet_id" {
-  description = "ID of the secondary private subnet for high availability"
-  type        = string
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for the database"
+  type        = list(string)
 }
 
 variable "availability_zones" {

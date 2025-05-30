@@ -13,9 +13,9 @@ variable "vpc_cidr" {
   type        = string
 }
 
-variable "private_subnet_id" {
-  description = "ID of the private subnet"
-  type        = string
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
 }
 
 variable "node_type" {
