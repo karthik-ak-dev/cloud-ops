@@ -7,6 +7,8 @@ vpc_cidr     = "10.0.0.0/16"
 deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
 deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
 deploy_ecr = true     # Set to false to skip ECR repositories deployment
+deploy_eks = true     # Set to false to skip EKS cluster deployment
+deploy_alb_controller = true  # Set to false to skip ALB controller deployment
 
 # Redis Configuration
 redis_node_type  = "cache.t3.small"

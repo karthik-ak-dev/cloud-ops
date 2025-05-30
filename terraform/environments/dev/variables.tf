@@ -34,6 +34,18 @@ variable "deploy_ecr" {
   default     = true
 }
 
+variable "deploy_eks" {
+  description = "Whether to deploy EKS cluster"
+  type        = bool
+  default     = true
+}
+
+variable "deploy_alb_controller" {
+  description = "Whether to deploy AWS Load Balancer Controller"
+  type        = bool
+  default     = true
+}
+
 # Redis variables
 variable "redis_node_type" {
   description = "ElastiCache node type"

@@ -79,8 +79,9 @@ module "aurora_postgres" {
   depends_on = [module.vpc]
 }
 
-# Create EKS cluster - required for Kubernetes resources
+# Optional: Create EKS cluster if enabled
 module "eks" {
+  count  = var.deploy_eks ? 1 : 0
   source = "../../modules/eks"
 
   project_name       = var.project_name
@@ -96,28 +97,30 @@ module "eks" {
   depends_on = [module.vpc]
 }
 
-# Phase 3: Configure Kubernetes and Helm providers
+# Phase 3: Configure Kubernetes and Helm providers (only if EKS is enabled)
 # This second call to the providers module initializes the Kubernetes and Helm providers
 # Now that the EKS cluster exists, we can use its outputs to configure the providers
 module "providers_k8s" {
+  count  = var.deploy_eks ? 1 : 0
   source = "../../modules/providers"
   
   region                               = var.region
-  eks_cluster_endpoint                 = module.eks.cluster_endpoint
-  eks_cluster_certificate_authority_data = module.eks.cluster_certificate_authority_data
-  eks_cluster_name                     = module.eks.cluster_name
+  eks_cluster_endpoint                 = module.eks[0].cluster_endpoint
+  eks_cluster_certificate_authority_data = module.eks[0].cluster_certificate_authority_data
+  eks_cluster_name                     = module.eks[0].cluster_name
 
   depends_on = [module.eks]  # This ensures EKS exists before trying to configure K8s providers
 }
 
-# Phase 4: Deploy Kubernetes resources using the Kubernetes and Helm providers
+# Phase 4: Optional: Deploy ALB controller if enabled (and if EKS is enabled)
 # The ALB controller is deployed using Helm
 # It implicitly uses the Helm provider configured in the providers_k8s module
 module "alb_controller" {
+  count  = var.deploy_eks && var.deploy_alb_controller ? 1 : 0
   source = "../../modules/alb-controller"
 
-  iam_role_arn  = module.eks.aws_load_balancer_controller_role_arn
-  cluster_name  = module.eks.cluster_name
+  iam_role_arn  = module.eks[0].aws_load_balancer_controller_role_arn
+  cluster_name  = module.eks[0].cluster_name
   region        = var.region
   vpc_id        = module.vpc.vpc_id
 
