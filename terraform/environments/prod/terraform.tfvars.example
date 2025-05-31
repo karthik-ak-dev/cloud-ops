@@ -5,6 +5,7 @@ vpc_cidr     = "10.0.0.0/16"
 
 # Feature flags
 deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
+deploy_aurora_srvless = true  # Set to false to skip Aurora PostgreSQL Serverless deployment
 deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
 deploy_valkey_srvless = true  # Set to false to skip Valkey Serverless deployment
 deploy_ecr = true     # Set to false to skip ECR repositories deployment
@@ -28,6 +29,16 @@ postgres_engine_version = "16.6"
 postgres_database_name  = "postgres-db"
 postgres_master_username = "postgres"
 postgres_master_password = "your-strong-db-password"  # CHANGE THIS
+
+# Aurora PostgreSQL Serverless Configuration
+postgres_srvless_engine_version = "16.6"
+postgres_srvless_database_name = "postgres-srvless-db"
+postgres_srvless_master_username = "postgres"
+postgres_srvless_master_password = "your-strong-srvless-db-password"  # CHANGE THIS
+postgres_srvless_auto_pause = false  # Disabled for production
+postgres_srvless_max_capacity = 8
+postgres_srvless_min_capacity = 2
+postgres_srvless_seconds_until_auto_pause = 1800  # 30 minutes
 
 # EKS Configuration
 kubernetes_version   = "1.28"

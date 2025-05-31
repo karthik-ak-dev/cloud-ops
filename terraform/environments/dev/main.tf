@@ -98,6 +98,35 @@ module "aurora_postgres" {
   depends_on = [module.vpc]
 }
 
+# Optional: Create Aurora PostgreSQL Serverless if enabled
+module "aurora_postgres_serverless" {
+  count  = var.deploy_aurora_srvless ? 1 : 0
+  source = "../../modules/aurora-postgres-serverless"
+
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
+  vpc_cidr           = var.vpc_cidr
+  private_subnet_ids = module.vpc.private_subnet_ids
+  
+  engine_version       = var.postgres_srvless_engine_version
+  database_name        = var.postgres_srvless_database_name
+  master_username      = var.postgres_srvless_master_username
+  master_password      = var.postgres_srvless_master_password
+  deletion_protection  = var.postgres_srvless_deletion_protection
+  skip_final_snapshot  = var.postgres_srvless_skip_final_snapshot
+  
+  # Serverless-specific parameters
+  auto_pause                = var.postgres_srvless_auto_pause
+  max_capacity              = var.postgres_srvless_max_capacity
+  min_capacity              = var.postgres_srvless_min_capacity
+  seconds_until_auto_pause  = var.postgres_srvless_seconds_until_auto_pause
+  timeout_action            = var.postgres_srvless_timeout_action
+  
+  availability_zones = ["${var.region}a", "${var.region}b"]
+
+  depends_on = [module.vpc]
+}
+
 # Optional: Create EKS cluster if enabled
 module "eks" {
   count  = var.deploy_eks ? 1 : 0
