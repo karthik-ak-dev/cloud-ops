@@ -96,7 +96,7 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only" {
 resource "aws_eks_cluster" "main" {
   name     = "${var.project_name}-eks-cluster"
   role_arn = aws_iam_role.eks_cluster.arn
-  version  = var.kubernetes_version  # Kubernetes version (e.g., 1.28)
+  version  = var.kubernetes_version  # Kubernetes version (e.g., 1.29)
 
   vpc_config {
     # Includes both public and private subnets across multiple AZs

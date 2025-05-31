@@ -45,7 +45,7 @@ postgres_srvless_deletion_protection = true   # For prod environment, enable del
 postgres_srvless_skip_final_snapshot = false  # For prod environment, create final snapshot on deletion
 
 # EKS Configuration
-kubernetes_version   = "1.28"
+kubernetes_version   = "1.29"
 eks_instance_type    = "m5.large"
 eks_desired_capacity = 3
 eks_max_capacity     = 6

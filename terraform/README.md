@@ -125,7 +125,7 @@ postgres_master_username = "postgres"
 postgres_master_password = "your-strong-password-here"  # CHANGE THIS
 
 # EKS Configuration
-kubernetes_version   = "1.28"
+kubernetes_version   = "1.29"
 eks_instance_type    = "t3.medium"  # Use m5.large for production
 eks_desired_capacity = 2            # Use 3 for production
 eks_max_capacity     = 4            # Use 6 for production

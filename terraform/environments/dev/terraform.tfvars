@@ -9,8 +9,8 @@ deploy_aurora_srvless = true  # Set to false to skip Aurora PostgreSQL Serverles
 deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
 deploy_valkey_srvless = true  # Set to false to skip Valkey Serverless deployment
 deploy_ecr = true     # Set to false to skip ECR repositories deployment
-deploy_eks = false     # Set to false to skip EKS cluster deployment
-deploy_alb_controller = false  # Set to false to skip ALB controller deployment
+deploy_eks = true     # Set to false to skip EKS cluster deployment
+deploy_alb_controller = true  # Set to false to skip ALB controller deployment
 
 # Redis Configuration
 redis_node_type  = "cache.t3.small"
@@ -45,7 +45,7 @@ postgres_srvless_deletion_protection = false  # For dev environment, disable del
 postgres_srvless_skip_final_snapshot = true   # For dev environment, skip final snapshot on deletion
 
 # EKS Configuration
-kubernetes_version   = "1.28"
+kubernetes_version   = "1.29"
 eks_instance_type    = "t3.medium"
 eks_desired_capacity = 1
 eks_max_capacity     = 4

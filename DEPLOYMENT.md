@@ -125,7 +125,7 @@ Ensure you have the following tools installed on your local machine:
    postgres_master_password = "your-strong-db-password"  # CHANGE THIS
    
    # EKS Configuration
-   kubernetes_version   = "1.28"
+   kubernetes_version   = "1.29"
    eks_instance_type    = "t3.medium"  # Development size
    eks_desired_capacity = 2
    eks_max_capacity     = 4
@@ -205,7 +205,7 @@ Ensure you have the following tools installed on your local machine:
    postgres_master_password = "your-strong-db-password"  # CHANGE THIS
    
    # EKS Configuration
-   kubernetes_version   = "1.28"
+   kubernetes_version   = "1.29"
    eks_instance_type    = "m5.large"  # Production-grade instance
    eks_desired_capacity = 3
    eks_max_capacity     = 6
