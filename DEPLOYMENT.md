@@ -120,7 +120,7 @@ Ensure you have the following tools installed on your local machine:
    # Aurora PostgreSQL Configuration
    postgres_instance_class = "db.t3.medium"  # Development size
    postgres_instance_count = 2
-   postgres_database_name  = "postgres-db"
+   postgres_database_name  = "postgresdb"
    postgres_master_username = "postgres"
    postgres_master_password = "your-strong-db-password"  # CHANGE THIS
    
@@ -200,7 +200,7 @@ Ensure you have the following tools installed on your local machine:
    # Aurora PostgreSQL Configuration
    postgres_instance_class = "db.r5.large"  # Production-grade instance
    postgres_instance_count = 3  # More instances for production
-   postgres_database_name  = "postgres-db"
+   postgres_database_name  = "postgresdb"
    postgres_master_username = "postgres"
    postgres_master_password = "your-strong-db-password"  # CHANGE THIS
    

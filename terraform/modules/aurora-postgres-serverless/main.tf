@@ -59,7 +59,8 @@ resource "aws_rds_cluster" "aurora_srvless" {
   cluster_identifier              = "${var.project_name}-aurora-srvless-cluster"
   engine                          = "aurora-postgresql"
   engine_version                  = var.engine_version
-  engine_mode                     = "serverless"
+  # For Serverless v2, use "provisioned" mode
+  engine_mode                     = "provisioned"
   availability_zones              = var.availability_zones
   database_name                   = var.database_name
   master_username                 = var.master_username
@@ -76,15 +77,38 @@ resource "aws_rds_cluster" "aurora_srvless" {
   skip_final_snapshot             = var.skip_final_snapshot
   final_snapshot_identifier       = var.skip_final_snapshot ? null : "${var.project_name}-aurora-srvless-final-snapshot"
   
-  scaling_configuration {
-    auto_pause               = var.auto_pause
-    max_capacity             = var.max_capacity
-    min_capacity             = var.min_capacity
-    seconds_until_auto_pause = var.seconds_until_auto_pause
-    timeout_action           = var.timeout_action
+  # Serverless v2 uses serverlessv2_scaling_configuration instead of scaling_configuration
+  serverlessv2_scaling_configuration {
+    min_capacity = var.min_capacity
+    max_capacity = var.max_capacity
   }
 
   tags = {
     Name = "${var.project_name}-aurora-srvless-cluster"
+  }
+  
+  # AWS best practice: Let AWS manage the actual AZ placement for Aurora clusters
+  # - Initially we specify our preferred AZs, but after creation we let AWS optimize placement
+  # - Aurora's storage is automatically distributed across AZs regardless of instance placement
+  # - AWS may need to adjust AZs for maintenance, capacity optimization, or recovery
+  # - This prevents unnecessary cluster recreation during Terraform operations
+  lifecycle {
+    ignore_changes = [availability_zones]
+  }
+}
+
+# For Aurora Serverless v2, we need at least one instance with "db.serverless" class
+resource "aws_rds_cluster_instance" "aurora_srvless_instance" {
+  count                = 1
+  identifier           = "${var.project_name}-aurora-srvless-instance-${count.index}"
+  cluster_identifier   = aws_rds_cluster.aurora_srvless.id
+  instance_class       = "db.serverless"
+  engine               = aws_rds_cluster.aurora_srvless.engine
+  engine_version       = aws_rds_cluster.aurora_srvless.engine_version
+  db_subnet_group_name = aws_db_subnet_group.aurora_srvless.name
+  publicly_accessible  = false
+
+  tags = {
+    Name = "${var.project_name}-aurora-srvless-instance-${count.index}"
   }
 } 

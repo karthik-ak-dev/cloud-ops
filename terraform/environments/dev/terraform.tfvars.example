@@ -26,19 +26,23 @@ valkey_srvless_auth_token = "your-valkey-srvless-auth-token-here"
 postgres_instance_class = "db.t3.medium"
 postgres_instance_count = 1
 postgres_engine_version = "16.6"
-postgres_database_name  = "postgres-db"
+postgres_database_name  = "postgresdb"
 postgres_master_username = "postgres"
 postgres_master_password = "your-strong-password-here"
+postgres_deletion_protection = false  # For dev environment, disable deletion protection
+postgres_skip_final_snapshot = true   # For dev environment, skip final snapshot on deletion
 
 # Aurora PostgreSQL Serverless Configuration
-postgres_srvless_engine_version = "16.6"
-postgres_srvless_database_name = "postgres-srvless-db"
+postgres_srvless_engine_version = "16.6"  # Aurora Serverless v2 supports PostgreSQL 16.x
+postgres_srvless_database_name = "postgresdb"
 postgres_srvless_master_username = "postgres"
 postgres_srvless_master_password = "your-srvless-strong-password-here"
 postgres_srvless_auto_pause = true
 postgres_srvless_max_capacity = 4
-postgres_srvless_min_capacity = 0.5
+postgres_srvless_min_capacity = 1
 postgres_srvless_seconds_until_auto_pause = 300
+postgres_srvless_deletion_protection = false  # For dev environment, disable deletion protection
+postgres_srvless_skip_final_snapshot = true   # For dev environment, skip final snapshot on deletion
 
 # EKS Configuration
 kubernetes_version   = "1.28"

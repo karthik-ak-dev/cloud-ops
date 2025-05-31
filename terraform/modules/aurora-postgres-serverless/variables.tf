@@ -27,7 +27,7 @@ variable "availability_zones" {
 variable "database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "postgres-db"
+  default     = "postgresdb"
 }
 
 variable "master_username" {
@@ -51,7 +51,7 @@ variable "port" {
 variable "engine_version" {
   description = "Version of the Aurora PostgreSQL engine"
   type        = string
-  default     = "16.6"  # Check AWS for supported serverless versions
+  default     = "16.6"  # Aurora Serverless v2 supports PostgreSQL 16.x
 }
 
 variable "backup_retention_period" {

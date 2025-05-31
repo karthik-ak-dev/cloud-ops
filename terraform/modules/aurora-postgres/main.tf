@@ -79,6 +79,15 @@ resource "aws_rds_cluster" "aurora" {
   tags = {
     Name = "${var.project_name}-aurora-cluster"
   }
+  
+  # AWS best practice: Let AWS manage the actual AZ placement for Aurora clusters
+  # - Initially we specify our preferred AZs, but after creation we let AWS optimize placement
+  # - Aurora's storage is automatically distributed across AZs regardless of instance placement
+  # - AWS may need to adjust AZs for maintenance, capacity optimization, or recovery
+  # - This prevents unnecessary cluster recreation during Terraform operations
+  lifecycle {
+    ignore_changes = [availability_zones]
+  }
 }
 
 resource "aws_rds_cluster_instance" "aurora_instances" {

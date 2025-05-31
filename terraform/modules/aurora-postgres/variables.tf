@@ -27,7 +27,7 @@ variable "availability_zones" {
 variable "database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "postgres-db"
+  default     = "postgresdb"
 }
 
 variable "master_username" {

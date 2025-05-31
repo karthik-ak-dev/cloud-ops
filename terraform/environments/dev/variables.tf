@@ -143,7 +143,7 @@ variable "postgres_engine_version" {
 variable "postgres_database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "postgres-db"
+  default     = "postgresdb"
 }
 
 variable "postgres_master_username" {
@@ -180,7 +180,7 @@ variable "postgres_srvless_engine_version" {
 variable "postgres_srvless_database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "postgres-srvless-db"
+  default     = "postgresdb"
 }
 
 variable "postgres_srvless_master_username" {
@@ -222,7 +222,7 @@ variable "postgres_srvless_max_capacity" {
 variable "postgres_srvless_min_capacity" {
   description = "Minimum Aurora capacity unit for the Aurora Serverless cluster"
   type        = number
-  default     = 0.5
+  default     = 1
 }
 
 variable "postgres_srvless_seconds_until_auto_pause" {

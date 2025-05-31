@@ -143,7 +143,7 @@ variable "postgres_engine_version" {
 variable "postgres_database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "postgres-db"
+  default     = "postgresdb"
 }
 
 variable "postgres_master_username" {
@@ -174,13 +174,13 @@ variable "postgres_skip_final_snapshot" {
 variable "postgres_srvless_engine_version" {
   description = "Engine version for Aurora PostgreSQL Serverless"
   type        = string
-  default     = "16.6"
+  default     = "16.6"  # Aurora Serverless v2 supports PostgreSQL 16.x
 }
 
 variable "postgres_srvless_database_name" {
   description = "Name of the initial database to create"
   type        = string
-  default     = "postgres-srvless-db"
+  default     = "postgresdb"
 }
 
 variable "postgres_srvless_master_username" {
