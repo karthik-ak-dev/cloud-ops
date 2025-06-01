@@ -1,5 +1,28 @@
 name: Update and Deploy Service
 
+# =====================================================================
+# REQUIRED SECRETS:
+# =====================================================================
+# AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+# These credentials must belong to an IAM user that:
+# 1. Has permissions for EKS operations
+# 2. Is mapped in the EKS cluster's aws-auth ConfigMap to a Kubernetes RBAC role
+#
+# To add your CI/CD IAM user to EKS:
+# 1. Get your IAM user ARN:
+#    aws sts get-caller-identity --query Arn --output text
+#
+# 2. Edit the aws-auth ConfigMap in your EKS cluster:
+#    kubectl edit configmap aws-auth -n kube-system
+#
+# 3. Add your user mapping:
+#    mapUsers:
+#    - userarn: arn:aws:iam::123456789012:user/ci-cd-user
+#      username: ci-cd-user
+#      groups:
+#      - system:masters
+# =====================================================================
+
 on:
   workflow_dispatch:
     inputs:
