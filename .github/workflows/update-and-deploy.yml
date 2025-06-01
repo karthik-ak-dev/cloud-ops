@@ -8,12 +8,11 @@ on:
         required: true
         type: string
       environment:
-        description: 'Environment (dev, staging, prod)'
+        description: 'Environment (dev, prod)'
         required: true
         type: choice
         options:
           - dev
-          - staging
           - prod
         default: 'dev'
       image_tag:
@@ -32,6 +31,7 @@ jobs:
   update-and-deploy:
     name: Update Helm Values and Deploy
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     
     steps:
       - name: Checkout code
