@@ -1,36 +1,5 @@
 name: Update and Deploy Service
 
-# =====================================================================
-# REQUIRED SECRET: GH_PAT
-# =====================================================================
-# This workflow requires a GitHub Personal Access Token (PAT) to push 
-# changes to the repository. The token is used for updating Helm values 
-# files with new image tags.
-#
-# How to create and set up the token:
-#
-# 1. Create a Personal Access Token (PAT):
-#    - Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
-#    - Click "Generate new token"
-#    - Name: "Repository Update Access"
-#    - Expiration: Set as needed (consider security implications of long-lived tokens)
-#    - Repository access: Select "Only select repositories" and choose this repository
-#    - Permissions:
-#      * Contents: Read and write (to update Helm values)
-#    - Click "Generate token"
-#    - COPY THE TOKEN IMMEDIATELY (you won't see it again)
-#
-# 2. Add the token as a repository secret:
-#    - Go to this repository → Settings → Secrets and variables → Actions
-#    - Click "New repository secret"
-#    - Name: GH_PAT
-#    - Value: Paste the token you copied
-#    - Click "Add secret"
-#
-# Security Note: This token grants permission to update your repository.
-# Always use the principle of least privilege and rotate tokens regularly.
-# =====================================================================
-
 on:
   workflow_dispatch:
     inputs:
@@ -56,6 +25,10 @@ on:
         type: string
         default: 'us-east-1'
 
+# Add permissions for the GITHUB_TOKEN
+permissions:
+  contents: write
+
 env: {}
 
 jobs:
@@ -67,6 +40,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+          token: ${{ github.token }}
       
       # Install yq for YAML processing
       - name: Install yq
@@ -90,13 +66,10 @@ jobs:
           yq e ".image.tag = \"${{ github.event.inputs.image_tag }}\"" -i ${{ github.event.inputs.service }}.yaml
           
           # Commit and push the updated values file
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add ${{ github.event.inputs.service }}.yaml
           git commit -m "ci: update ${{ github.event.inputs.service }} image to ${{ github.event.inputs.image_tag }}" || echo "No changes to commit"
-          
-          # Use PAT for authentication
-          git remote set-url origin https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
           git push
       
       # Install Helm
