@@ -1,0 +1,53 @@
+# Service1 configuration for dev environment
+name: cloud-ops-nodejs-ms
+environment: dev
+
+replicaCount: 1
+
+image:
+  repository: dev-client-name-services
+  tag: "latest"
+
+service:
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/group.name: dev-client-name
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+  hosts:
+    - paths:
+        - path: /cloud-ops-nodejs-ms
+          pathType: Prefix
+  # When DNS mapping is done, uncomment the following and update the host to the DNS name
+  # hosts:
+  #   - host: api-dev.example.com
+  #     paths:
+  #       - path: /cloud-ops-nodejs-ms
+  #         pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  - name: NODE_ENV
+    value: development
+  - name: LOG_LEVEL
+    value: debug
+  - name: SERVICE_VERSION
+    value: "1.0.0"
+
+# Redis connection info
+# envFromSecret: "cloud-ops-nodejs-ms-secrets" 
