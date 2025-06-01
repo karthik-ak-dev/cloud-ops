@@ -11,7 +11,7 @@ on:
 
 env:
   AWS_REGION: us-east-1  # Update with your AWS region
-  INFRA_REPO: owner/infrastructure-repo  # Replace with your infrastructure repo
+  INFRA_GIT_REPO: owner/infrastructure-repo  # Replace with your infrastructure repo
   SERVICE_NAME: example-service  # Replace with your service name
   PROJECT_NAME: client  # Should match the project_name in Terraform
 
@@ -90,11 +90,11 @@ jobs:
       - name: Trigger deployment
         env:
           ENVIRONMENT: ${{ steps.determine-env.outputs.environment }}
-          GH_TOKEN: ${{ secrets.INFRA_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.INFRA_GIT_REPO_TOKEN }}
         run: |
           # Trigger the workflow in the infrastructure repository
           curl -X POST \
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ env.INFRA_REPO }}/actions/workflows/update-and-deploy.yml/dispatches \
+            https://api.github.com/repos/${{ env.INFRA_GIT_REPO }}/actions/workflows/update-and-deploy.yml/dispatches \
             -d "{\"ref\":\"main\",\"inputs\":{\"service\":\"${{ env.SERVICE_NAME }}\",\"environment\":\"$ENVIRONMENT\",\"image_tag\":\"$IMAGE_TAG\",\"repository\":\"$REPOSITORY\",\"registry\":\"$REGISTRY\"}}" 
