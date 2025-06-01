@@ -93,9 +93,9 @@ module "aurora_postgres" {
   deletion_protection = var.postgres_deletion_protection
   skip_final_snapshot = var.postgres_skip_final_snapshot
   
-  # Specify all three AZs for better reliability, AWS will select the optimal ones
+  # Specify multiple AZs for better reliability, AWS will select the optimal ones
   # We use lifecycle.ignore_changes in the module to prevent forced recreation on AZ differences
-  availability_zones = ["${var.region}a", "${var.region}b", "${var.region}c"]
+  availability_zones = ["${var.region}a", "${var.region}b"]
 
   depends_on = [module.vpc]
 }
@@ -124,7 +124,7 @@ module "aurora_postgres_serverless" {
   seconds_until_auto_pause  = var.postgres_srvless_seconds_until_auto_pause
   timeout_action            = var.postgres_srvless_timeout_action
   
-  # Specify all three AZs for better reliability, AWS will select the optimal ones
+  # Specify multiple AZs for better reliability, AWS will select the optimal ones
   # We use lifecycle.ignore_changes in the module to prevent forced recreation on AZ differences
   availability_zones = ["${var.region}a", "${var.region}b"]
 
