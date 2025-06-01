@@ -39,6 +39,7 @@ module "ecr" {
   repository_names   = var.ecr_repository_names
   max_image_count    = var.ecr_max_image_count
   scan_on_push       = var.ecr_scan_on_push
+  region             =  var.region
 }
 
 # Optional: Create Redis ElastiCache if enabled

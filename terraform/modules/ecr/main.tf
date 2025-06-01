@@ -107,9 +107,17 @@ resource "aws_iam_user_policy" "ci_ecr_policy" {
 # authentication mechanism.
 #
 # HOW TO VIEW THE KEYS:
-# After terraform apply, run one of these commands:
-#   terraform output ci_access_key_id        # View access key ID
-#   terraform output ci_secret_access_key    # View secret key
+# Since these outputs are not defined in the root module, use the terraform console:
+#
+# Method 1 - Using the console:
+#   terraform console                        # Enter console
+#   nonsensitive(module.ecr[0].ci_access_key_id)  # Show access key ID
+#   nonsensitive(module.ecr[0].ci_secret_access_key)  # Show secret key
+#   exit                                     # Exit console
+#
+# Method 2 - One-liner:
+#   echo "nonsensitive(module.ecr[0].ci_access_key_id)" | terraform console
+#   echo "nonsensitive(module.ecr[0].ci_secret_access_key)" | terraform console
 #
 # IMPORTANT: Store these values in your CI platform's secure secrets storage
 resource "aws_iam_access_key" "ci_ecr_user_key" {
