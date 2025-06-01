@@ -91,10 +91,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ github.event.inputs.region }}
       
+      # Verify AWS authentication
+      - name: Verify AWS auth
+        run: |
+          aws sts get-caller-identity
+          aws eks list-clusters
+      
       # Configure kubectl
       - name: Configure kubectl
         run: |
-          aws eks update-kubeconfig --region ${{ github.event.inputs.region }} --name ${{ github.event.inputs.project_name }}-eks-cluster
+          echo "Configuring kubectl for cluster ${{ github.event.inputs.project_name }}-eks-cluster in region ${{ github.event.inputs.region }}"
+          aws eks update-kubeconfig --region ${{ github.event.inputs.region }} --name ${{ github.event.inputs.project_name }}-eks-cluster --verbose
+          
+          # Verify kubectl configuration
+          kubectl config view
+          kubectl cluster-info
       
       # Deploy service with Helm
       - name: Deploy with Helm
