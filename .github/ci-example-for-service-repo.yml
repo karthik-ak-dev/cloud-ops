@@ -13,11 +13,32 @@ env:
   AWS_REGION: us-east-1  # Update with your AWS region
   INFRA_GIT_REPO: owner/infrastructure-repo  # Replace with your infrastructure repo
   SERVICE_NAME: example-service  # Replace with your service name
-  PROJECT_NAME: client  # Should match the project_name in Terraform
+  PROJECT_NAME: client-name  # Should match the project_name in Terraform
 
 jobs:
+  # First job - determine the environment based on branch
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.determine-env.outputs.environment }}
+    steps:
+      # Determine the environment (dev, prod)
+      - name: Determine environment
+        id: determine-env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+
+  # Main job - build and publish to ECR
   build-and-publish:
     name: Build and Publish to ECR
+    needs: determine-environment
+    # Use the environment determined by the previous job
+    environment: ${{ needs.determine-environment.outputs.environment }}
     runs-on: ubuntu-latest
     
     steps:
@@ -29,16 +50,6 @@ jobs:
         uses: actions/setup-node@v3  # Example for Node.js
         with:
           node-version: '18'
-      
-      # Determine the environment (dev, staging, prod)
-      - name: Determine environment
-        id: determine-env
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-          else
-            echo "environment=dev" >> $GITHUB_OUTPUT
-          fi
       
       # Generate image tag from commit SHA
       - name: Generate image tag
@@ -53,7 +64,7 @@ jobs:
       #     npm ci
       #     npm test
       
-      # Configure AWS credentials
+      # Configure AWS credentials - now using environment-specific secrets
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -89,7 +100,7 @@ jobs:
       # Trigger deployment in the infrastructure repository
       - name: Trigger deployment
         env:
-          ENVIRONMENT: ${{ steps.determine-env.outputs.environment }}
+          ENVIRONMENT: ${{ needs.determine-environment.outputs.environment }}
           GH_TOKEN: ${{ secrets.INFRA_GIT_REPO_TOKEN }}
         run: |
           # Trigger the workflow in the infrastructure repository
