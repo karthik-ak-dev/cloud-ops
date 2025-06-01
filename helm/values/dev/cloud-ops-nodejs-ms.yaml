@@ -16,12 +16,12 @@ ingress:
     - paths:
         - path: /cloud-ops-nodejs-ms
           pathType: Prefix
-  # When DNS mapping is done, uncomment the following and update the host to the DNS name
-  # hosts:
-  #   - host: api-dev.example.com
-  #     paths:
-  #       - path: /cloud-ops-nodejs-ms
-  #         pathType: Prefix
+          # When DNS mapping is done, uncomment the following and update the host to the DNS name
+          # hosts:
+          #   - host: api-dev.example.com
+          #     paths:
+          #       - path: /cloud-ops-nodejs-ms
+          #         pathType: Prefix
 autoscaling:
   enabled: true
   minReplicas: 1
