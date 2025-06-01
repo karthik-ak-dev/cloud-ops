@@ -3,6 +3,38 @@ name: Build and Publish
 # This is an EXAMPLE CI workflow for a service repository
 # Place this in the .github/workflows directory of your service repository
 
+# =====================================================================
+# REQUIRED SECRET: INFRA_GIT_REPO_TOKEN
+# =====================================================================
+# The INFRA_GIT_REPO_TOKEN is a GitHub Personal Access Token (PAT) that 
+# allows this service repository workflow to trigger workflows in your 
+# infrastructure repository.
+#
+# How to create and set up the token:
+#
+# 1. Create a Personal Access Token (PAT):
+#    - Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+#    - Click "Generate new token"
+#    - Name: "Infra Repo Workflow Access"
+#    - Expiration: Set as needed (consider security implications of long-lived tokens)
+#    - Repository access: Select "Only select repositories" and choose your infrastructure repo
+#    - Permissions:
+#      * Actions: Read and write (to trigger workflows)
+#      * Contents: Read and write (to update Helm values)
+#    - Click "Generate token"
+#    - COPY THE TOKEN IMMEDIATELY (you won't see it again)
+#
+# 2. Add the token as a repository secret:
+#    - Go to your service repository → Settings → Secrets and variables → Actions
+#    - Click "New repository secret"
+#    - Name: INFRA_GIT_REPO_TOKEN
+#    - Value: Paste the token you copied
+#    - Click "Add secret"
+#
+# Security Note: This token grants permission to update your infrastructure.
+# Always use the principle of least privilege and rotate tokens regularly.
+# =====================================================================
+
 on:
   push:
     branches: [ main, develop ]
