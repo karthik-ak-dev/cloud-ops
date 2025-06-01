@@ -53,4 +53,23 @@ variable "repository_policy" {
   ]
 }
 EOF
+}
+
+# CI User Variables
+variable "create_ci_user" {
+  description = "Whether to create IAM user for CI/CD to push to ECR"
+  type        = bool
+  default     = true
+}
+
+variable "create_access_keys" {
+  description = "Whether to create access keys for the CI user (warning: keys will be stored in state)"
+  type        = bool
+  default     = true
+}
+
+variable "region" {
+  description = "AWS region for resources"
+  type        = string
+  default     = "us-east-1"
 } 
