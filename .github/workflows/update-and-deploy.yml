@@ -24,6 +24,11 @@ on:
         required: true
         type: string
         default: 'us-east-1'
+      project_name:
+        description: 'Project name (used for cluster name)'
+        required: true
+        type: string
+        default: 'client-name'
 
 # Add permissions for the GITHUB_TOKEN
 permissions:
@@ -89,7 +94,7 @@ jobs:
       # Configure kubectl
       - name: Configure kubectl
         run: |
-          aws eks update-kubeconfig --region ${{ github.event.inputs.region }} --name client-eks-cluster  # Replace with your cluster name
+          aws eks update-kubeconfig --region ${{ github.event.inputs.region }} --name ${{ github.event.inputs.project_name }}-eks-cluster
       
       # Deploy service with Helm
       - name: Deploy with Helm
