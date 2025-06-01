@@ -70,4 +70,39 @@ output "eks_cluster_name" {
 output "eks_config_command" {
   description = "Command to configure kubectl"
   value       = var.deploy_eks ? "aws eks update-kubeconfig --region ${var.region} --name ${module.eks[0].cluster_name}" : "EKS cluster not deployed"
+}
+
+# CI/CD Outputs
+output "ci_user_name" {
+  description = "Name of the IAM user for CI to push to ECR"
+  value       = module.ci_cd.ci_user_name
+}
+
+output "ci_access_key_id" {
+  description = "Access key ID for the CI user"
+  value       = module.ci_cd.ci_access_key_id
+  sensitive   = true
+}
+
+output "ci_secret_access_key" {
+  description = "Secret access key for the CI user"
+  value       = module.ci_cd.ci_secret_access_key
+  sensitive   = true
+}
+
+output "cd_user_name" {
+  description = "Name of the IAM user for CD to deploy to EKS"
+  value       = module.ci_cd.cd_user_name
+}
+
+output "cd_access_key_id" {
+  description = "Access key ID for the CD user"
+  value       = module.ci_cd.cd_access_key_id
+  sensitive   = true
+}
+
+output "cd_secret_access_key" {
+  description = "Secret access key for the CD user"
+  value       = module.ci_cd.cd_secret_access_key
+  sensitive   = true
 } 

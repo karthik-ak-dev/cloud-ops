@@ -266,4 +266,23 @@ variable "eks_min_capacity" {
   description = "Minimum number of worker nodes"
   type        = number
   default     = 2
+}
+
+# CI/CD variables
+variable "create_ci_user" {
+  description = "Whether to create IAM user for CI to push to ECR"
+  type        = bool
+  default     = true
+}
+
+variable "create_cd_user" {
+  description = "Whether to create IAM user for CD to deploy to EKS"
+  type        = bool
+  default     = true
+}
+
+variable "create_access_keys" {
+  description = "Whether to create access keys for the users (warning: keys will be stored in state)"
+  type        = bool
+  default     = true
 } 

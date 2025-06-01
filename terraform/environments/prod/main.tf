@@ -42,6 +42,18 @@ module "ecr" {
   region             =  var.region
 }
 
+# CI/CD users for GitHub Actions workflows
+module "ci_cd" {
+  source = "../../modules/ci-cd"
+
+  project_name      = var.project_name
+  repository_names  = var.ecr_repository_names
+  region            = var.region
+  create_ci_user    = var.create_ci_user
+  create_cd_user    = var.create_cd_user
+  create_access_keys = var.create_access_keys
+}
+
 # Optional: Create Redis ElastiCache if enabled
 module "redis" {
   count  = var.deploy_redis ? 1 : 0

@@ -49,4 +49,9 @@ kubernetes_version   = "1.29"
 eks_instance_type    = "m5.large"
 eks_desired_capacity = 3
 eks_max_capacity     = 6
-eks_min_capacity     = 2 
+eks_min_capacity     = 2
+
+# CI/CD Configuration
+create_ci_user = true
+create_cd_user = true
+create_access_keys = true 
