@@ -4,7 +4,7 @@ environment: dev
 replicaCount: 1
 image:
   repository: dev-client-name-services
-  tag: "cloud-ops-nodejs-ms-20250601-2bbac6e"
+  tag: "cloud-ops-nodejs-ms-20250601-f77051d"
 service:
   port: 8080
 ingress:
