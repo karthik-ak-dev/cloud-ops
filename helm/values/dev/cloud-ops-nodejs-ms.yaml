@@ -1,16 +1,12 @@
 # Service1 configuration for dev environment
 name: cloud-ops-nodejs-ms
 environment: dev
-
 replicaCount: 1
-
 image:
   repository: dev-client-name-services
-  tag: "latest"
-
+  tag: "cloud-ops-nodejs-ms-20250601-2bbac6e"
 service:
   port: 8080
-
 ingress:
   enabled: true
   annotations:
@@ -26,13 +22,11 @@ ingress:
   #     paths:
   #       - path: /cloud-ops-nodejs-ms
   #         pathType: Prefix
-
 autoscaling:
   enabled: true
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 70
-
 resources:
   limits:
     cpu: 500m
@@ -40,7 +34,6 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
-
 env:
   - name: NODE_ENV
     value: development
@@ -48,6 +41,5 @@ env:
     value: debug
   - name: SERVICE_VERSION
     value: "1.0.0"
-
 # Redis connection info
 # envFromSecret: "cloud-ops-nodejs-ms-secrets" 
