@@ -16,11 +16,51 @@ name: Update and Deploy Service
 #    kubectl edit configmap aws-auth -n kube-system
 #
 # 3. Add your user mapping:
-  #  mapUsers: |
-  #  - userarn: arn:aws:iam::035475678676:user/dev-client-name-cd-user
-  #    username: ci-cd-user
-  #    groups:
-  #    - system:masters
+#    mapUsers: |
+#    - userarn: arn:aws:iam::035475678676:user/dev-client-name-cd-user
+#      username: ci-cd-user
+#      groups:
+#      - system:masters
+#
+# For console access, add your admin/developer IAM users the same way:
+#
+#    mapUsers: |
+#    - userarn: arn:aws:iam::035475678676:user/your-admin-user
+#      username: admin-user
+#      groups:
+#      - system:masters  # Full admin access
+#
+# Or use different permission levels:
+#    - userarn: arn:aws:iam::035475678676:user/your-viewer-user
+#      username: viewer-user
+#      groups:
+#      - system:basic-user  # Read-only access
+#
+# IMPORTANT FOR ROLES (especially for AWS SSO):
+# The AWS IAM Authenticator doesn't permit a path in the role ARN used in the ConfigMap.
+# You MUST remove the path from the role ARN. For example:
+#
+# INCORRECT (with path):
+#    - rolearn: arn:aws:iam::035475678676:role/aws-reserved/sso.amazonaws.com/ap-south-1/AWSReservedSSO_AdministratorAccess_1234567
+#
+# CORRECT (path removed):
+#    - rolearn: arn:aws:iam::035475678676:role/AWSReservedSSO_AdministratorAccess_1234567
+#
+# See AWS docs: https://docs.aws.amazon.com/eks/latest/userguide/security-iam-troubleshoot.html
+#
+# Available built-in Kubernetes groups:
+# - system:masters - Full admin access to all resources
+# - system:basic-user - Basic read-only access
+# - system:nodes - For worker nodes
+# - system:bootstrappers - For node bootstrapping
+#
+# Alternatively, you can use eksctl:
+#    eksctl create iamidentitymapping \
+#      --cluster your-cluster-name \
+#      --region your-region \
+#      --arn arn:aws:iam::035475678676:user/your-username \
+#      --username your-username \
+#      --group system:masters
 # =====================================================================
 
 on:

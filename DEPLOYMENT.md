@@ -463,6 +463,121 @@ This project uses a multi-repository approach for CI/CD:
 
 5. **Push code to the service repository** to trigger the CI/CD pipeline
 
+### EKS Console Access and RBAC
+
+By default, only the IAM entity that created the EKS cluster has access to the Kubernetes API and the AWS EKS console. To grant access to additional users:
+
+1. **Get the IAM user/role ARN** that needs access:
+
+   ```bash
+   aws sts get-caller-identity --query Arn --output text
+   ```
+
+2. **Add the user to the aws-auth ConfigMap**:
+
+   ```bash
+   kubectl edit configmap aws-auth -n kube-system
+   ```
+
+   Add a `mapUsers` or `mapRoles` section depending on whether you're adding an IAM user or role:
+
+   ```yaml
+   # For IAM users
+   mapUsers: |
+     - userarn: arn:aws:iam::123456789012:user/admin-user
+       username: admin-user
+       groups:
+       - system:masters
+     - userarn: arn:aws:iam::123456789012:user/read-only-user
+       username: read-only-user
+       groups:
+       - system:basic-user
+
+   # For IAM roles
+   mapRoles: |
+     - rolearn: arn:aws:iam::123456789012:role/admin-role
+       username: admin-role
+       groups:
+       - system:masters
+   ```
+
+3. **IMPORTANT: For roles with paths (like AWS SSO roles):**
+
+   The AWS IAM Authenticator does not support paths in role ARNs. You must remove the path from the role ARN in the ConfigMap:
+
+   ```yaml
+   # INCORRECT (with path)
+   mapRoles: |
+     - rolearn: arn:aws:iam::123456789012:role/aws-reserved/sso.amazonaws.com/region/AWSReservedSSO_RoleName_1234567
+       username: admin-role
+       groups:
+       - system:masters
+
+   # CORRECT (path removed)
+   mapRoles: |
+     - rolearn: arn:aws:iam::123456789012:role/AWSReservedSSO_RoleName_1234567
+       username: admin-role
+       groups:
+       - system:masters
+   ```
+
+   This is specifically mentioned in [AWS EKS documentation](https://docs.aws.amazon.com/eks/latest/userguide/security-iam-troubleshoot.html#security-iam-troubleshoot-cannot-view-nodes-or-workloads) under the "aws-auth ConfigMap does not grant access to the cluster" section.
+
+4. **Available Kubernetes RBAC groups**:
+
+   | Group | Access Level |
+   |-------|-------------|
+   | system:masters | Full cluster admin access |
+   | system:basic-user | Basic read-only access |
+   | system:nodes | For worker nodes |
+   | system:bootstrappers | For node bootstrapping |
+
+5. **Using eksctl** (alternative method):
+
+   ```bash
+   # Install eksctl if you haven't already
+   curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+   sudo mv /tmp/eksctl /usr/local/bin
+   
+   # Add an IAM user with admin access
+   eksctl create iamidentitymapping \
+     --cluster $PROJECT_NAME-eks-cluster \
+     --region $REGION \
+     --arn arn:aws:iam::123456789012:user/admin-user \
+     --username admin-user \
+     --group system:masters
+     
+   # Add an IAM user with read-only access
+   eksctl create iamidentitymapping \
+     --cluster $PROJECT_NAME-eks-cluster \
+     --region $REGION \
+     --arn arn:aws:iam::123456789012:user/readonly-user \
+     --username readonly-user \
+     --group system:basic-user
+   ```
+   
+   Note: When using eksctl with roles that have paths, you must still remove the path from the ARN.
+
+6. **Verify the mappings**:
+
+   ```bash
+   kubectl describe configmap aws-auth -n kube-system
+   ```
+
+7. **Troubleshooting console access**:
+
+   If you still can't access EKS resources in the console after updating the aws-auth ConfigMap, check:
+   
+   - Your IAM principal has the AWS managed policy `AmazonEKSClusterPolicy` attached
+   - You're using the same AWS Region as your cluster
+   - Try logging out completely and logging back in to refresh credentials
+   - The role ARN in aws-auth doesn't have any path components as mentioned above
+
+After adding the IAM user/role to the aws-auth ConfigMap, the user should be able to:
+- Access the Kubernetes API using kubectl
+- View the Kubernetes resources in the AWS EKS console
+- Manage the cluster according to the permissions granted by the assigned group
+
 ### Infrastructure Updates
 
 1. **Make changes to Terraform code** as needed
