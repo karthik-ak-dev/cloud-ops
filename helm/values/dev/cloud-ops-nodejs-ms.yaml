@@ -4,7 +4,7 @@ environment: dev
 replicaCount: 1
 image:
   repository: 035475678676.dkr.ecr.eu-west-3.amazonaws.com/dev-client-name-services
-  tag: "cloud-ops-nodejs-ms-20250602-f77051d"
+  tag: "cloud-ops-nodejs-ms-20250602-c7b62ac"
 service:
   port: 8080
 ingress:
