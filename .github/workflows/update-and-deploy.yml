@@ -16,11 +16,11 @@ name: Update and Deploy Service
 #    kubectl edit configmap aws-auth -n kube-system
 #
 # 3. Add your user mapping:
-#    mapUsers:
-#    - userarn: arn:aws:iam::123456789012:user/ci-cd-user
-#      username: ci-cd-user
-#      groups:
-#      - system:masters
+  #  mapUsers: |
+  #  - userarn: arn:aws:iam::035475678676:user/dev-client-name-cd-user
+  #    username: ci-cd-user
+  #    groups:
+  #    - system:masters
 # =====================================================================
 
 on:
