@@ -479,27 +479,33 @@ By default, only the IAM entity that created the EKS cluster has access to the K
    kubectl edit configmap aws-auth -n kube-system
    ```
 
-   Add a `mapUsers` or `mapRoles` section depending on whether you're adding an IAM user or role:
+   Here's a complete working example of an aws-auth ConfigMap:
 
    ```yaml
-   # For IAM users
-   mapUsers: |
-     - userarn: arn:aws:iam::123456789012:user/admin-user
-       username: admin-user
-       groups:
-       - system:masters
-     - userarn: arn:aws:iam::123456789012:user/read-only-user
-       username: read-only-user
-       groups:
-       - system:basic-user
-
-   # For IAM roles
-   mapRoles: |
-     - rolearn: arn:aws:iam::123456789012:role/admin-role
-       username: admin-role
-       groups:
-       - system:masters
+   apiVersion: v1
+   data:
+     mapRoles: |
+       - groups:
+         - system:bootstrappers
+         - system:nodes
+         rolearn: arn:aws:iam::035475678676:role/dev-client-name-eks-node-group-role
+         username: system:node:{{EC2PrivateDNSName}}
+       - rolearn: arn:aws:iam::035475678676:role/AWSReservedSSO_AdministratorAccess_8610a110c7dfff47
+         username: console-user
+         groups:
+         - system:masters
+     mapUsers: |
+       - userarn: arn:aws:iam::035475678676:user/dev-client-name-cd-user
+         username: ci-cd-user
+         groups:
+         - system:masters
+   kind: ConfigMap
+   metadata:
+     name: aws-auth
+     namespace: kube-system
    ```
+
+   > ⚠️ **IMPORTANT**: AWS SSO roles must be added to `mapRoles`, not to `mapUsers`. Using `userarn` with a role ARN in the `mapUsers` section will not work correctly.
 
 3. **IMPORTANT: For roles with paths (like AWS SSO roles):**
 
@@ -508,15 +514,15 @@ By default, only the IAM entity that created the EKS cluster has access to the K
    ```yaml
    # INCORRECT (with path)
    mapRoles: |
-     - rolearn: arn:aws:iam::123456789012:role/aws-reserved/sso.amazonaws.com/region/AWSReservedSSO_RoleName_1234567
-       username: admin-role
+     - rolearn: arn:aws:iam::035475678676:role/aws-reserved/sso.amazonaws.com/ap-south-1/AWSReservedSSO_AdministratorAccess_8610a110c7dfff47
+       username: console-user
        groups:
        - system:masters
 
    # CORRECT (path removed)
    mapRoles: |
-     - rolearn: arn:aws:iam::123456789012:role/AWSReservedSSO_RoleName_1234567
-       username: admin-role
+     - rolearn: arn:aws:iam::035475678676:role/AWSReservedSSO_AdministratorAccess_8610a110c7dfff47
+       username: console-user
        groups:
        - system:masters
    ```
@@ -541,19 +547,19 @@ By default, only the IAM entity that created the EKS cluster has access to the K
    
    # Add an IAM user with admin access
    eksctl create iamidentitymapping \
-     --cluster $PROJECT_NAME-eks-cluster \
-     --region $REGION \
-     --arn arn:aws:iam::123456789012:user/admin-user \
-     --username admin-user \
+     --cluster dev-client-name-eks-cluster \
+     --region eu-west-3 \
+     --arn arn:aws:iam::035475678676:user/dev-client-name-cd-user \
+     --username ci-cd-user \
      --group system:masters
      
-   # Add an IAM user with read-only access
+   # Add an AWS SSO role with admin access (remove path from ARN)
    eksctl create iamidentitymapping \
-     --cluster $PROJECT_NAME-eks-cluster \
-     --region $REGION \
-     --arn arn:aws:iam::123456789012:user/readonly-user \
-     --username readonly-user \
-     --group system:basic-user
+     --cluster dev-client-name-eks-cluster \
+     --region eu-west-3 \
+     --arn arn:aws:iam::035475678676:role/AWSReservedSSO_AdministratorAccess_8610a110c7dfff47 \
+     --username console-user \
+     --group system:masters
    ```
    
    Note: When using eksctl with roles that have paths, you must still remove the path from the ARN.
