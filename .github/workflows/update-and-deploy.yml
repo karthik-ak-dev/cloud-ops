@@ -57,7 +57,13 @@ on:
 permissions:
   contents: write
 
-env: {}
+# Define common environment variables at the job level
+env:
+  SERVICE: ${{ github.event.inputs.service }}
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  REGION: ${{ github.event.inputs.region }}
+  PROJECT_NAME: ${{ github.event.inputs.project_name }}
+  IMAGE_TAG: ${{ github.event.inputs.image_tag }}
 
 jobs:
   update-and-deploy:
@@ -72,6 +78,21 @@ jobs:
           persist-credentials: true
           token: ${{ github.token }}
       
+      # Set additional environment variables
+      - name: Set up environment variables
+        run: |
+          # Set namespace to be used by all steps
+          NAMESPACE="${{ env.SERVICE }}-${{ env.ENVIRONMENT }}"
+          echo "NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
+          
+          # EKS cluster name
+          CLUSTER_NAME="${{ env.PROJECT_NAME }}-eks-cluster"
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+          
+          # Release name for Helm
+          RELEASE_NAME="${{ env.SERVICE }}-${{ env.ENVIRONMENT }}"
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+      
       # Install yq for YAML processing
       - name: Install yq
         run: |
@@ -82,22 +103,22 @@ jobs:
       - name: Update Helm values
         run: |
           # Update the image tag in the values file
-          cd helm/values/${{ github.event.inputs.environment }}
+          cd helm/values/${{ env.ENVIRONMENT }}
           
           # Ensure file exists
-          if [ ! -f "${{ github.event.inputs.service }}.yaml" ]; then
-            echo "Error: Values file for service ${{ github.event.inputs.service }} does not exist."
+          if [ ! -f "${{ env.SERVICE }}.yaml" ]; then
+            echo "Error: Values file for service ${{ env.SERVICE }} does not exist."
             exit 1
           fi
           
           # Update the image.tag field while preserving the file format
-          yq e ".image.tag = \"${{ github.event.inputs.image_tag }}\"" -i ${{ github.event.inputs.service }}.yaml
+          yq e ".image.tag = \"${{ env.IMAGE_TAG }}\"" -i ${{ env.SERVICE }}.yaml
           
           # Commit and push the updated values file
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add ${{ github.event.inputs.service }}.yaml
-          git commit -m "ci: update ${{ github.event.inputs.service }} image to ${{ github.event.inputs.image_tag }}" || echo "No changes to commit"
+          git add ${{ env.SERVICE }}.yaml
+          git commit -m "ci: update ${{ env.SERVICE }} image to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
           git push
       
       # Install Helm
@@ -112,7 +133,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ github.event.inputs.region }}
+          aws-region: ${{ env.REGION }}
       
       # Verify AWS authentication
       - name: Verify AWS auth
@@ -123,44 +144,44 @@ jobs:
       # Configure kubectl
       - name: Configure kubectl
         run: |
-          echo "Configuring kubectl for cluster ${{ github.event.inputs.project_name }}-eks-cluster in region ${{ github.event.inputs.region }}"
-          aws eks update-kubeconfig --region ${{ github.event.inputs.region }} --name ${{ github.event.inputs.project_name }}-eks-cluster --verbose
+          echo "Configuring kubectl for cluster ${{ env.CLUSTER_NAME }} in region ${{ env.REGION }}"
+          aws eks update-kubeconfig --region ${{ env.REGION }} --name ${{ env.CLUSTER_NAME }} --verbose
           
           # Verify kubectl configuration
           kubectl config view
           kubectl cluster-info
+          
+      # Create or ensure namespace exists
+      - name: Create namespace
+        run: |
+          echo "Creating or ensuring namespace ${{ env.NAMESPACE }} exists"
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
       
       # Deploy service with Helm
       - name: Deploy with Helm
         run: |
-          SERVICE="${{ github.event.inputs.service }}"
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          
-          echo "Deploying $SERVICE to $ENVIRONMENT environment"
+          echo "Deploying ${{ env.SERVICE }} to ${{ env.ENVIRONMENT }} environment in namespace ${{ env.NAMESPACE }}"
           
           # Check if this is an update or initial deployment
-          if helm status $SERVICE-$ENVIRONMENT >/dev/null 2>&1; then
+          if helm status ${{ env.RELEASE_NAME }} -n ${{ env.NAMESPACE }} >/dev/null 2>&1; then
             # Update existing deployment
-            helm upgrade $SERVICE-$ENVIRONMENT ./helm/charts/microservice -f ./helm/values/$ENVIRONMENT/$SERVICE.yaml
+            helm upgrade ${{ env.RELEASE_NAME }} ./helm/charts/microservice -f ./helm/values/${{ env.ENVIRONMENT }}/${{ env.SERVICE }}.yaml -n ${{ env.NAMESPACE }}
           else
             # Initial deployment
-            helm install $SERVICE-$ENVIRONMENT ./helm/charts/microservice -f ./helm/values/$ENVIRONMENT/$SERVICE.yaml
+            helm install ${{ env.RELEASE_NAME }} ./helm/charts/microservice -f ./helm/values/${{ env.ENVIRONMENT }}/${{ env.SERVICE }}.yaml -n ${{ env.NAMESPACE }}
           fi
       
       # Verify deployment
       - name: Verify deployment
         run: |
-          SERVICE="${{ github.event.inputs.service }}"
-          ENVIRONMENT="${{ github.event.inputs.environment }}"
-          
           # Wait for deployment to stabilize
-          kubectl rollout status deployment/$SERVICE-$ENVIRONMENT --timeout=180s || true
+          kubectl rollout status deployment/${{ env.RELEASE_NAME }} -n ${{ env.NAMESPACE }} --timeout=180s || true
           
           # Get pod status
-          kubectl get pods -l app.kubernetes.io/name=$SERVICE
+          kubectl get pods -l app.kubernetes.io/name=${{ env.SERVICE }} -n ${{ env.NAMESPACE }}
           
           # Get service status
-          kubectl get svc -l app.kubernetes.io/name=$SERVICE
+          kubectl get svc -l app.kubernetes.io/name=${{ env.SERVICE }} -n ${{ env.NAMESPACE }}
           
           # Get ingress status if enabled
-          kubectl get ingress -l app.kubernetes.io/name=$SERVICE || true 
+          kubectl get ingress -l app.kubernetes.io/name=${{ env.SERVICE }} -n ${{ env.NAMESPACE }} || true 
