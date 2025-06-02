@@ -184,9 +184,6 @@ provider "kubernetes" {
       command     = "aws"
     }
   }
-  
-  # Skip this provider configuration when EKS is not deployed
-  alias = "eks"
 }
 
 # Conditional Helm provider configuration
@@ -204,9 +201,6 @@ provider "helm" {
       }
     }
   }
-  
-  # Skip this provider configuration when EKS is not deployed
-  alias = "eks"
 }
 
 # Phase 3: Deploy EKS-dependent resources
@@ -220,12 +214,6 @@ module "alb_controller" {
   cluster_name  = module.eks[0].cluster_name
   region        = var.region
   vpc_id        = module.vpc.vpc_id
-
-  # Explicitly pass providers to the module
-  providers = {
-    kubernetes = kubernetes.eks
-    helm       = helm.eks
-  }
 
   depends_on = [module.eks]
 } 
