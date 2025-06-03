@@ -21,7 +21,7 @@ variable "vpc_id" {
 variable "chart_version" {
   description = "Version of the AWS Load Balancer Controller Helm chart"
   type        = string
-  default     = "1.5.3"
+  default     = "1.13.0"
 }
 
 variable "enable_cloudflare_ip_restriction" {
