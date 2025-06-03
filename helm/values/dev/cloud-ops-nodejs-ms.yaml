@@ -17,13 +17,17 @@ service:
   port: 8080
 ingress:
   enabled: true
+  # Complete annotation set (Helm replaces, doesn't merge annotations)
   annotations:
+    # Core ALB annotations (required for ALB functionality)
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    
+    # Environment-specific configuration
     alb.ingress.kubernetes.io/group.name: dev-client-name
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/ssl-redirect: "false"
     # Use ALB security group created by ALB controller module
     alb.ingress.kubernetes.io/security-groups: "sg-00ea0de692fc221e3"
   hosts:

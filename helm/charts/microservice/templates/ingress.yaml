@@ -7,13 +7,10 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "microservice.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   {{- if .Values.ingress.tls }}
   tls:

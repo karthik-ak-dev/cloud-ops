@@ -40,11 +40,26 @@ service:
 # Ingress configuration for ALB
 ingress:
   enabled: false
+  # All ALB annotations are now centralized here for better management
   annotations:
-    # Specific ALB/AWS annotations can be added here
-    alb.ingress.kubernetes.io/group.name: ingress-group
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # Core ALB annotations (required for ALB functionality)
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    
+    # Default configuration (override these in environment-specific values)
+    alb.ingress.kubernetes.io/group.name: default-ingress-group
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    
+    # SSL configuration (uncomment and configure as needed)
+    # For HTTPS setup, uncomment the following:
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account:certificate/cert-id
+    
+    # Security group (override with actual security group ID from Terraform output)
+    # alb.ingress.kubernetes.io/security-groups: sg-xxxxxxxxxxxxxxxxx
   hosts:
     - host: chart-example.local
       paths:
