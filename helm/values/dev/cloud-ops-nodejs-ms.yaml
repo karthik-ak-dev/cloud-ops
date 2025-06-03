@@ -23,6 +23,7 @@ ingress:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/ssl-redirect: "false"
     # Use ALB security group created by ALB controller module
     alb.ingress.kubernetes.io/security-groups: "sg-00ea0de692fc221e3"
   hosts:
