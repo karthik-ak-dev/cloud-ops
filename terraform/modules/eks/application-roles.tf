@@ -39,9 +39,13 @@ resource "aws_iam_role" "app_full_access" {
       }
       Action = "sts:AssumeRoleWithWebIdentity"
       Condition = {
-        StringEquals = {
-          # Uses the centralized OIDC provider URL
-          "${aws_iam_openid_connect_provider.eks_oidc.url}:sub" = "system:serviceaccount:default:app-full-access-sa"
+        StringLike = {
+          # Allow service accounts with specific patterns for flexibility
+          # This supports both the default SA and service-specific SAs
+          "${aws_iam_openid_connect_provider.eks_oidc.url}:sub" = [
+            "system:serviceaccount:default:app-full-access-sa",
+            "system:serviceaccount:*:*-sa"
+          ]
         }
       }
     }]
