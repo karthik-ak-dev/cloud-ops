@@ -293,10 +293,6 @@ variable "environment" {
   default     = "dev"
 }
 
-# =====================================================================
-# CLOUDFLARE SECURITY CONFIGURATION
-# =====================================================================
-
 variable "enable_cloudflare_ip_restriction" {
   description = "Whether to restrict ALB access to Cloudflare IP ranges only (recommended for production with Cloudflare)"
   type        = bool

@@ -24,10 +24,6 @@ variable "chart_version" {
   default     = "1.5.3"
 }
 
-# =====================================================================
-# ALB SECURITY GROUP VARIABLES
-# =====================================================================
-
 variable "enable_cloudflare_ip_restriction" {
   description = "Whether to restrict ALB access to Cloudflare IP ranges only"
   type        = bool
