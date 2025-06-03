@@ -2,7 +2,6 @@
 name: cloud-ops-nodejs-ms
 environment: dev
 replicaCount: 1
-
 # ServiceAccount configuration for secure AWS access via IRSA
 serviceAccount:
   create: true
@@ -11,14 +10,11 @@ serviceAccount:
     # This provides secure access to RDS, S3, Secrets Manager, and Redis/ElastiCache
     # Replace with actual role ARN from Terraform output: terraform output app_full_access_role_arn
     eks.amazonaws.com/role-arn: "arn:aws:iam::035475678676:role/dev-client-name-app-full-access-role"
-
 image:
   repository: 035475678676.dkr.ecr.eu-west-3.amazonaws.com/dev-client-name-services
-  tag: "cloud-ops-nodejs-ms-20250602-c7b62ac"
-
+  tag: "cloud-ops-nodejs-ms-20250603-339e679"
 service:
   port: 8080
-
 ingress:
   enabled: true
   annotations:
@@ -34,7 +30,6 @@ ingress:
     - paths:
         - path: /cloud-ops-nodejs-ms
           pathType: Prefix
-
 autoscaling:
   enabled: false
   # Disabled until metrics server is deployed
@@ -42,7 +37,6 @@ autoscaling:
   # maxReplicas: 3
   # targetCPUUtilizationPercentage: 70
   # targetMemoryUtilizationPercentage: 70
-
 resources:
   limits:
     cpu: 500m
@@ -50,7 +44,6 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
-
 env:
   - name: NODE_ENV
     value: development
@@ -58,4 +51,3 @@ env:
     value: debug
   - name: SERVICE_VERSION
     value: "1.0.0"
-
