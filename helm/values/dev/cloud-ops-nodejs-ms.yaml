@@ -23,7 +23,6 @@ ingress:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    
     # Environment-specific configuration
     alb.ingress.kubernetes.io/group.name: dev-client-name
     alb.ingress.kubernetes.io/healthcheck-path: /health
