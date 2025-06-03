@@ -17,6 +17,10 @@
 # 4. Once deployed, the controller automatically provisions ALBs/NLBs when you create:
 #    - Kubernetes Services of type LoadBalancer
 #    - Kubernetes Ingress resources with appropriate annotations
+#
+# 🔗 DEPENDENCIES:
+# - Requires OIDC provider from oidc-provider.tf
+# - This role trusts the centralized OIDC provider for authentication
 # ==================================================================================
 
 # IAM Policy for AWS Load Balancer Controller
@@ -252,28 +256,55 @@ resource "aws_iam_policy" "aws_load_balancer_controller" {
   })
 }
 
+# ==================================================================================
+# IAM ROLE WITH OIDC TRUST RELATIONSHIP
+# ==================================================================================
+# 
+# This creates an IAM role that can ONLY be assumed by the specific Kubernetes
+# ServiceAccount in your EKS cluster. No other entity can assume this role.
+#
+# HOW THE TRUST RELATIONSHIP WORKS:
+# 1. Pod starts with ServiceAccount "aws-load-balancer-controller" 
+# 2. EKS automatically mounts a JWT token signed by the cluster's OIDC provider
+# 3. AWS SDK in the pod exchanges this token for temporary AWS credentials
+# 4. AWS STS validates the token against the centralized OIDC provider
+# 5. STS checks the "sub" claim matches our condition below
+# 6. If valid, STS issues temporary credentials with this role's permissions
+#
+# AUTHENTICATION FLOW EXAMPLE:
+# JWT Token "sub" claim: "system:serviceaccount:kube-system:aws-load-balancer-controller"
+# Our condition allows:   "system:serviceaccount:kube-system:aws-load-balancer-controller"  
+# Result: ✅ MATCH - Role assumption allowed
+#
+# SECURITY: Only pods using the exact ServiceAccount can assume this role
+# ==================================================================================
+
 # IAM role for the AWS Load Balancer Controller service account
-# This uses OIDC federation to allow secure authentication between 
-# Kubernetes service accounts and AWS IAM without storing credentials
 resource "aws_iam_role" "aws_load_balancer_controller" {
   name = "${var.project_name}-alb-controller-role"
 
-  # Trust policy that allows the role to be assumed via web identity federation
-  # This restricts the role to only be assumed by the specific K8s service account
+  # Trust policy that establishes the OIDC trust relationship
+  # This references the centralized OIDC provider from oidc-provider.tf
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect = "Allow"
         Principal = {
-          # Uses the EKS cluster's OIDC provider URL
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}"
+          # Reference to the centralized OIDC provider
+          # This establishes trust with tokens issued by our EKS cluster
+          Federated = aws_iam_openid_connect_provider.eks_oidc.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
-        # Condition restricts role assumption to only the load balancer controller service account
+        
+        # CRITICAL SECURITY CONDITION:
+        # Only allows role assumption by the specific ServiceAccount
+        # The "sub" claim in the JWT token must exactly match this value
         Condition = {
           StringEquals = {
-            "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+            # Format: {oidc-url}:sub = "system:serviceaccount:{namespace}:{serviceaccount-name}"
+            # Uses the centralized OIDC provider URL from oidc-provider.tf
+            "${aws_iam_openid_connect_provider.eks_oidc.url}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
           }
         }
       }
@@ -286,14 +317,4 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
 resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
   policy_arn = aws_iam_policy.aws_load_balancer_controller.arn
   role       = aws_iam_role.aws_load_balancer_controller.name
-}
-
-# Get the AWS account ID for constructing ARNs
-data "aws_caller_identity" "current" {}
-
-# Output the role ARN for use in the alb-controller module
-# This is used to annotate the Kubernetes service account
-output "aws_load_balancer_controller_role_arn" {
-  description = "ARN of the IAM role for AWS Load Balancer Controller"
-  value       = aws_iam_role.aws_load_balancer_controller.arn
 } 

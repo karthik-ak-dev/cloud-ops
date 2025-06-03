@@ -19,6 +19,18 @@ image:
 # Optional image pull secrets
 imagePullSecrets: []
 
+# ServiceAccount configuration for IRSA (IAM Roles for Service Accounts)
+serviceAccount:
+  # Create a ServiceAccount for this application
+  create: false
+  # Name of the ServiceAccount (defaults to release name if not specified)
+  name: ""
+  # Annotations for the ServiceAccount (use this for IRSA role ARN)
+  annotations: {}
+  # Example IRSA annotation:
+  # annotations:
+  #   eks.amazonaws.com/role-arn: "arn:aws:iam::123456789:role/my-app-role"
+
 # Service configuration
 service:
   type: ClusterIP

@@ -54,4 +54,11 @@ eks_min_capacity     = 1
 # CI/CD Configuration
 create_ci_user = true
 create_cd_user = true
-create_access_keys = true 
+create_access_keys = true
+
+# Cloudflare Security Configuration
+enable_cloudflare_ip_restriction = false  # Set to true to restrict ALB access to Cloudflare IPs only
+
+# SSL HANDLING: Use Cloudflare for SSL termination (recommended)
+# Configure your domain in Cloudflare to proxy traffic to the ALB DNS
+# This provides better performance, DDoS protection, and no certificate management 

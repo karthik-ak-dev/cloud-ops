@@ -1,7 +1,7 @@
-# Service1 configuration for dev environment
+# Cloud-ops-nodejs-ms configuration for production environment
 name: cloud-ops-nodejs-ms
-environment: dev
-replicaCount: 1
+environment: prod
+replicaCount: 3
 
 # ServiceAccount configuration for secure AWS access via IRSA
 serviceAccount:
@@ -10,11 +10,11 @@ serviceAccount:
   annotations:
     # This provides secure access to RDS, S3, Secrets Manager, and Redis/ElastiCache
     # Replace with actual role ARN from Terraform output: terraform output app_full_access_role_arn
-    eks.amazonaws.com/role-arn: "arn:aws:iam::035475678676:role/dev-client-name-app-full-access-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::035475678676:role/prod-client-name-app-full-access-role"
 
 image:
-  repository: 035475678676.dkr.ecr.eu-west-3.amazonaws.com/dev-client-name-services
-  tag: "cloud-ops-nodejs-ms-20250602-c7b62ac"
+  repository: 035475678676.dkr.ecr.eu-west-3.amazonaws.com/prod-client-name-services
+  tag: "cloud-ops-nodejs-ms-latest"  # Update with your production tag
 
 service:
   port: 8080
@@ -22,13 +22,13 @@ service:
 ingress:
   enabled: true
   annotations:
-    alb.ingress.kubernetes.io/group.name: dev-client-name
+    alb.ingress.kubernetes.io/group.name: prod-client-name
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     # Use ALB security group created by ALB controller module
-    # alb.ingress.kubernetes.io/security-groups: "UPDATE_WITH_TERRAFORM_OUTPUT_alb_security_group_id"
+    alb.ingress.kubernetes.io/security-groups: "UPDATE_WITH_TERRAFORM_OUTPUT_alb_security_group_id"
   hosts:
     # No host restriction - accepts any hostname (including ALB's direct DNS)
     - paths:
@@ -38,24 +38,23 @@ ingress:
 autoscaling:
   enabled: false
   # Disabled until metrics server is deployed
-  # minReplicas: 1
-  # maxReplicas: 3
-  # targetCPUUtilizationPercentage: 70
-  # targetMemoryUtilizationPercentage: 70
+  # minReplicas: 3
+  # maxReplicas: 10
+  # targetCPUUtilizationPercentage: 75
+  # targetMemoryUtilizationPercentage: 75
 
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 1000m
+    memory: 1Gi
   requests:
-    cpu: 100m
-    memory: 128Mi
+    cpu: 250m
+    memory: 512Mi
 
 env:
   - name: NODE_ENV
-    value: development
+    value: production
   - name: LOG_LEVEL
-    value: debug
+    value: info
   - name: SERVICE_VERSION
     value: "1.0.0"
-

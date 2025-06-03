@@ -86,94 +86,6 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only" {
   role       = aws_iam_role.eks_node_group.name
 }
 
-# 4. RDS access - AWS managed policy
-resource "aws_iam_role_policy_attachment" "rds_access" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
-  role       = aws_iam_role.eks_node_group.name
-}
-
-# 5. ElastiCache (Redis) and MemoryDB (Valkey) full access policy
-resource "aws_iam_policy" "redis_access" {
-  name        = "${var.project_name}-eks-redis-access"
-  description = "Policy granting full access to ElastiCache and MemoryDB for EKS pods"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      # ElastiCache (Redis) full access
-      {
-        Effect = "Allow"
-        Action = [
-          "elasticache:*"
-        ]
-        Resource = "*"
-      },
-      # MemoryDB (Valkey) full access
-      {
-        Effect = "Allow"
-        Action = [
-          "memorydb:*"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "redis_access" {
-  policy_arn = aws_iam_policy.redis_access.arn
-  role       = aws_iam_role.eks_node_group.name
-}
-
-# 6. AWS Secrets Manager access - AWS managed policy
-resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
-  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
-  role       = aws_iam_role.eks_node_group.name
-}
-
-# 7. S3 access - AWS managed policy
-resource "aws_iam_role_policy_attachment" "s3_access" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-  role       = aws_iam_role.eks_node_group.name
-}
-
-# 8. Custom safety policy - explicitly deny destructive actions
-resource "aws_iam_policy" "protective_guardrails" {
-  name        = "${var.project_name}-eks-protective-guardrails"
-  description = "Policy explicitly denying destructive actions on critical resources"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Deny",
-      "Action": [
-        "s3:DeleteBucket*",
-        "rds:DeleteDB*",
-        "rds:DeleteGlobalCluster",
-        "rds:DeleteDBCluster",
-        "elasticache:DeleteCache*",
-        "elasticache:DeleteReplicationGroup",
-        "memorydb:DeleteCluster",
-        "secretsmanager:Create*",
-        "secretsmanager:Put*",
-        "secretsmanager:Update*",
-        "secretsmanager:Delete*",
-        "secretsmanager:Restore*",
-        "secretsmanager:Rotate*"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "protective_guardrails" {
-  policy_arn = aws_iam_policy.protective_guardrails.arn
-  role       = aws_iam_role.eks_node_group.name
-}
-
 # =====================================
 # EKS CLUSTER
 # =====================================
@@ -267,11 +179,6 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.eks_worker_node_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
     aws_iam_role_policy_attachment.ecr_read_only,
-    aws_iam_role_policy_attachment.rds_access,
-    aws_iam_role_policy_attachment.redis_access,
-    aws_iam_role_policy_attachment.secrets_manager_access,
-    aws_iam_role_policy_attachment.s3_access,
-    aws_iam_role_policy_attachment.protective_guardrails,
   ]
 
   tags = {

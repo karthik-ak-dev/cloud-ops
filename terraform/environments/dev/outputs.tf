@@ -105,4 +105,16 @@ output "cd_secret_access_key" {
   description = "Secret access key for the CD user"
   value       = module.ci_cd.cd_secret_access_key
   sensitive   = true
+}
+
+# ALB Controller outputs (when deployed)
+output "alb_controller_helm_release_name" {
+  description = "Name of the ALB Controller Helm release"
+  value       = var.deploy_eks && var.deploy_alb_controller ? module.alb_controller[0].helm_release_name : ""
+}
+
+# ALB Security Group
+output "alb_security_group_id" {
+  description = "ID of the ALB security group (use in ingress annotations)"
+  value       = var.deploy_eks && var.deploy_alb_controller ? module.alb_controller[0].alb_security_group_id : ""
 } 

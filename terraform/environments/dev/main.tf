@@ -215,5 +215,8 @@ module "alb_controller" {
   region        = var.region
   vpc_id        = module.vpc.vpc_id
 
+  # ALB Security Configuration (properly located in ALB module)
+  enable_cloudflare_ip_restriction = var.enable_cloudflare_ip_restriction
+
   depends_on = [module.eks]
 } 

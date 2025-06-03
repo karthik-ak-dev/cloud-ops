@@ -285,4 +285,20 @@ variable "create_access_keys" {
   description = "Whether to create access keys for the users (warning: keys will be stored in state)"
   type        = bool
   default     = true
+}
+
+variable "environment" {
+  description = "Environment name (used for resource naming and tagging)"
+  type        = string
+  default     = "dev"
+}
+
+# =====================================================================
+# CLOUDFLARE SECURITY CONFIGURATION
+# =====================================================================
+
+variable "enable_cloudflare_ip_restriction" {
+  description = "Whether to restrict ALB access to Cloudflare IP ranges only (recommended for production with Cloudflare)"
+  type        = bool
+  default     = false
 } 

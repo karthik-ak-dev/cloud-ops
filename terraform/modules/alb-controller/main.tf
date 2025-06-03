@@ -7,6 +7,11 @@
 #
 # The deployment uses IAM Roles for Service Accounts (IRSA) to securely
 # provide AWS permissions to the controller without storing credentials.
+#
+# SSL HANDLING:
+# This module only deploys the ALB controller. SSL termination should be
+# handled by Cloudflare or other CDN services for better performance.
+# ====================================================================
 
 # Required providers declaration - this allows explicit provider passing from root module
 # Note: Version constraints are centralized in the providers module
@@ -18,7 +23,64 @@ terraform {
     helm = {
       source = "hashicorp/helm"
     }
+    aws = {
+      source = "hashicorp/aws"
+    }
   }
+}
+
+# =====================================================================
+# ALB SECURITY GROUP
+# =====================================================================
+# Security group for Application Load Balancers created by this controller
+# This provides proper security boundaries for ALB traffic
+
+resource "aws_security_group" "alb" {
+  name_prefix = "${var.cluster_name}-alb-"
+  vpc_id      = var.vpc_id
+
+  # Egress rule - allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound traffic"
+  }
+
+  tags = {
+    Name    = "${var.cluster_name}-alb-sg"
+    Purpose = "ALB-security-group"
+    ManagedBy = "terraform-alb-controller"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Default HTTP access rule (when Cloudflare restriction is disabled)
+resource "aws_security_group_rule" "alb_http_default" {
+  count             = var.enable_cloudflare_ip_restriction ? 0 : 1
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.alb.id
+  description       = "HTTP from anywhere"
+}
+
+# Cloudflare-only HTTP access rule (when enabled)
+resource "aws_security_group_rule" "alb_cloudflare_http" {
+  count             = var.enable_cloudflare_ip_restriction ? 1 : 0
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = var.cloudflare_ipv4_ranges
+  security_group_id = aws_security_group.alb.id
+  description       = "HTTP from Cloudflare IP ranges only"
 }
 
 # ---------------------------------------------------------------------
