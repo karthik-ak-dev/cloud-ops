@@ -28,21 +28,10 @@ output "cluster_security_group_id" {
   value       = aws_security_group.eks_cluster.id
 }
 
-# ==================================================================================
-# APPLICATION IRSA ROLE ARNs
-# ==================================================================================
-# These outputs provide the ARNs of application-level IRSA roles that can be
-# used to annotate Kubernetes ServiceAccounts for secure AWS access
-
 output "app_full_access_role_arn" {
   description = "ARN of the IAM role for applications needing full AWS access"
   value       = aws_iam_role.app_full_access.arn
 }
-
-# ==================================================================================
-# OIDC PROVIDER OUTPUTS
-# ==================================================================================
-# These outputs are used by other modules to reference the OIDC provider
 
 output "oidc_provider_arn" {
   description = "ARN of the OIDC provider - used by all IRSA roles"
@@ -54,13 +43,7 @@ output "oidc_provider_url" {
   value       = replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")
 }
 
-# ==================================================================================
-# INFRASTRUCTURE ROLE OUTPUTS
-# ==================================================================================
-
 output "aws_load_balancer_controller_role_arn" {
   description = "ARN of the IAM role for AWS Load Balancer Controller"
   value       = aws_iam_role.aws_load_balancer_controller.arn
 }
-
-# ================================================================================== 

@@ -36,7 +36,8 @@ terraform {
 # This provides proper security boundaries for ALB traffic
 
 resource "aws_security_group" "alb" {
-  name_prefix = "${var.cluster_name}-alb-"
+  name        = "${var.cluster_name}-alb-sg"
+  description = "Security group for Application Load Balancers"
   vpc_id      = var.vpc_id
 
   # Egress rule - allow all outbound traffic
@@ -49,13 +50,9 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name    = "${var.cluster_name}-alb-sg"
-    Purpose = "ALB-security-group"
+    Name      = "${var.cluster_name}-alb-sg"
+    Purpose   = "ALB-security-group"
     ManagedBy = "terraform-alb-controller"
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 }
 
