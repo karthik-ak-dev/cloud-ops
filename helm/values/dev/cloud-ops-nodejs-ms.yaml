@@ -12,7 +12,7 @@ serviceAccount:
     eks.amazonaws.com/role-arn: "arn:aws:iam::035475678676:role/dev-client-name-app-full-access-role"
 image:
   repository: 035475678676.dkr.ecr.eu-west-3.amazonaws.com/dev-client-name-services
-  tag: "cloud-ops-nodejs-ms-20250604-5055f1e"
+  tag: "cloud-ops-nodejs-ms-20250604-8071e90"
 service:
   port: 8080
 ingress:
