@@ -159,6 +159,8 @@ resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.project_name}-eks-node-group"
   node_role_arn   = aws_iam_role.eks_node_group.arn
+  version         = var.kubernetes_version  # Keep node group version in sync with cluster
+  ami_type        = "AL2023_x86_64_STANDARD"  # Amazon Linux 2023 - compatible with K8s 1.33+
   
   # Worker nodes in private subnets only - protected from direct internet access
   # Spread across multiple AZs for high availability

@@ -46,4 +46,4 @@ variable "min_capacity" {
   description = "Minimum number of worker nodes"
   type        = number
   default     = 1
-} 
+}

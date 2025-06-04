@@ -45,11 +45,11 @@ postgres_srvless_deletion_protection = false  # For dev environment, disable del
 postgres_srvless_skip_final_snapshot = true   # For dev environment, skip final snapshot on deletion
 
 # EKS Configuration
-kubernetes_version   = "1.33"
+kubernetes_version   = "1.33"  # Now supported with AL2023_x86_64 AMI
 eks_instance_type    = "t3.medium"
 eks_desired_capacity = 1
 eks_max_capacity     = 4
-eks_min_capacity     = 1 
+eks_min_capacity     = 1
 
 # CI/CD Configuration
 create_ci_user = true
