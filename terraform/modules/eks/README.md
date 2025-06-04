@@ -420,7 +420,7 @@ output "app_full_access_role_arn"               # For applications
 | `vpc_id` | VPC ID where EKS will be deployed | Required |
 | `public_subnet_ids` | Public subnet IDs for load balancers | Required |
 | `private_subnet_ids` | Private subnet IDs for worker nodes | Required |
-| `kubernetes_version` | Kubernetes version | `"1.29"` |
+| `kubernetes_version` | Kubernetes version | `"1.33"` |
 | `instance_type` | EC2 instance type for workers | `"t3.medium"` |
 | `desired_capacity` | Desired number of worker nodes | `2` |
 | `max_capacity` | Maximum number of worker nodes | `4` |
