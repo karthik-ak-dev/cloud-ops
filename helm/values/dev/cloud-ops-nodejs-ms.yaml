@@ -35,12 +35,11 @@ ingress:
         - path: /cloud-ops-nodejs-ms
           pathType: Prefix
 autoscaling:
-  enabled: false
-  # Disabled until metrics server is deployed
-  # minReplicas: 1
-  # maxReplicas: 3
-  # targetCPUUtilizationPercentage: 70
-  # targetMemoryUtilizationPercentage: 70
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
 resources:
   limits:
     cpu: 500m

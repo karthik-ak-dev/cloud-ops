@@ -184,4 +184,37 @@ resource "aws_eks_node_group" "main" {
   tags = {
     Name = "${var.project_name}-eks-node-group"
   }
+}
+
+# =====================================
+# EKS ADD-ONS
+# =====================================
+# Metrics Server - Required for HPA (Horizontal Pod Autoscaler)
+# Provides resource usage data (CPU/memory) for scaling decisions
+resource "aws_eks_addon" "metrics_server" {
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "metrics-server"
+  
+  # addon_version is optional - if not specified, EKS uses the default version for your cluster
+  # Uncomment and update below if you want to pin to a specific version
+  # addon_version             = "v0.7.2-eksbuild.1"
+
+  # Why OVERWRITE is recommended for metrics-server:
+  # 1. Metrics-server typically doesn't need customization
+  # 2. EKS version is optimized for the cluster (uses port 10251 for Fargate compatibility)
+  # 3. Ensures consistent configuration across environments
+  # 4. Prevents installation failures due to manual deployments
+  # 5. Maintains EKS management benefits (updates, security patches)
+  resolve_conflicts_on_create = "OVERWRITE"  # Replace any existing manual installations with EKS-managed version
+  resolve_conflicts_on_update = "OVERWRITE"  # Revert manual changes and apply EKS-managed configuration
+  
+  # Ensure the cluster and node group are ready before installing add-ons
+  depends_on = [
+    aws_eks_cluster.main,
+    aws_eks_node_group.main
+  ]
+
+  tags = {
+    Name = "${var.project_name}-metrics-server"
+  }
 } 

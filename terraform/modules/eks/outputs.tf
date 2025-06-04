@@ -29,7 +29,7 @@ output "cluster_security_group_id" {
 }
 
 output "app_full_access_role_arn" {
-  description = "ARN of the IAM role for applications needing full AWS access"
+  description = "ARN of the IAM role that provides full access to AWS services for applications"
   value       = aws_iam_role.app_full_access.arn
 }
 
@@ -46,4 +46,9 @@ output "oidc_provider_url" {
 output "aws_load_balancer_controller_role_arn" {
   description = "ARN of the IAM role for AWS Load Balancer Controller"
   value       = aws_iam_role.aws_load_balancer_controller.arn
+}
+
+output "metrics_server_addon_arn" {
+  description = "ARN of the metrics server EKS add-on"
+  value       = aws_eks_addon.metrics_server.arn
 }
