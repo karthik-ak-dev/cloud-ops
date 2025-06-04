@@ -88,16 +88,20 @@ autoscaling:
 livenessProbe:
   enabled: true
   path: /health
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
+  initialDelaySeconds: 30    # Reduced from 45s - still gives good startup time
+  periodSeconds: 8           # Slightly more frequent checks
+  timeoutSeconds: 2          # Reduced timeout - faster failure detection
+  failureThreshold: 3        # Keep 3 failures before restart
+  successThreshold: 1        # Keep default success threshold
 
 readinessProbe:
   enabled: true
   path: /health
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
+  initialDelaySeconds: 20    # Reduced from 35s - check readiness earlier
+  periodSeconds: 5           # Keep frequent checks for readiness
+  timeoutSeconds: 2          # Keep quick timeout
+  failureThreshold: 3        # Keep 3 failures threshold
+  successThreshold: 1        # Keep default success threshold
 
 # Node selector, affinity, and tolerations
 nodeSelector: {}
