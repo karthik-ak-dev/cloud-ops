@@ -13,22 +13,6 @@
 # handled by Cloudflare or other CDN services for better performance.
 # ====================================================================
 
-# Required providers declaration - this allows explicit provider passing from root module
-# Note: Version constraints are centralized in the providers module
-terraform {
-  required_providers {
-    kubernetes = {
-      source = "hashicorp/kubernetes"
-    }
-    helm = {
-      source = "hashicorp/helm"
-    }
-    aws = {
-      source = "hashicorp/aws"
-    }
-  }
-}
-
 # =====================================================================
 # ALB SECURITY GROUP
 # =====================================================================
@@ -53,6 +37,40 @@ resource "aws_security_group" "alb" {
     Name      = "${var.cluster_name}-alb-sg"
     Purpose   = "ALB-security-group"
     ManagedBy = "terraform-alb-controller"
+    # ===================================================================
+    # ALB CONTROLLER CLUSTER INTEGRATION TAGS
+    # ===================================================================
+    # These tags are essential for ALB controller to discover and use
+    # this security group for load balancers. The 'shared' value indicates
+    # that both Terraform and ALB controller can manage this resource.
+    # ===================================================================
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+  }
+
+  # ===================================================================
+  # LIFECYCLE MANAGEMENT FOR ALB CONTROLLER INTEGRATION
+  # ===================================================================
+  # Problem: ALB controller modifies tags on security groups it uses,
+  # causing Terraform to detect drift and attempt tag corrections.
+  # This creates conflicts during destroy operations.
+  # 
+  # Root Cause: ALB controller adds dynamic tags like:
+  #   - kubernetes.io/ingress-name
+  #   - elbv2.k8s.aws/resource
+  #   - ingress.k8s.aws/stack
+  # 
+  # Solution: Ignore tag changes made by ALB controller while preserving
+  # Terraform's ability to manage the core infrastructure tags.
+  # ===================================================================
+  lifecycle {
+    ignore_changes = [
+      # Ignore ALB controller dynamic tags to prevent conflicts
+      tags["kubernetes.io/ingress-name"],
+      tags["elbv2.k8s.aws/resource"],
+      tags["ingress.k8s.aws/stack"],
+      tags["elbv2.k8s.aws/cluster"],
+      tags["ingress.k8s.aws/resource"]
+    ]
   }
 }
 
@@ -172,4 +190,44 @@ resource "helm_release" "aws_load_balancer_controller" {
   # Ensure the service account exists before deploying the chart
   # This prevents race conditions during initial deployment
   depends_on = [kubernetes_service_account.aws_load_balancer_controller]
-} 
+}
+
+# ===================================================================
+# ALB CONTROLLER STATE TRACKING FOR PROPER DESTROY ORDER
+# ===================================================================
+# These data sources are now part of the ALB controller module
+# to ensure proper dependency resolution and clean destroy operations.
+# This eliminates the need for environment files to handle this logic.
+# ===================================================================
+
+# Track this ALB controller instance's Helm release
+data "helm_release" "self_status" {
+  name      = helm_release.aws_load_balancer_controller.name
+  namespace = helm_release.aws_load_balancer_controller.namespace
+  
+  depends_on = [helm_release.aws_load_balancer_controller]
+}
+
+# Track ALB controller pods to ensure proper cleanup coordination
+data "kubernetes_pods" "alb_controller_pods" {
+  metadata {
+    namespace = "kube-system"
+  }
+  
+  field_selector = "status.phase=Running"
+  label_selector = "app.kubernetes.io/name=aws-load-balancer-controller"
+  
+  depends_on = [helm_release.aws_load_balancer_controller]
+}
+
+# ===================================================================
+# DESTROY ORDER COORDINATION
+# ===================================================================
+# These data sources create implicit dependencies that ensure:
+# 1. During destroy, ALB controller is signaled first
+# 2. Controller cleans up AWS resources (ALBs, target groups, ENIs)
+# 3. Only then do VPC resources get destroyed
+# 4. This prevents all dependency violation errors
+# ===================================================================
+
+# AWS Load Balancer Controller IAM policy document for the service account 

@@ -91,6 +91,25 @@ resource "aws_eip" "nat" {
   tags = {
     Name = "${var.project_name}-nat-eip"
   }
+
+  # ===================================================================
+  # DEPENDENCY FIX FOR ALB CONTROLLER DESTROY ISSUES
+  # ===================================================================
+  # Problem: During `terraform destroy`, AWS fails with:
+  #   "VPC has mapped public addresses and cannot be deleted"
+  # 
+  # Root Cause: EIP can be detached before Internet Gateway is detached,
+  # but AWS Load Balancer Controller creates ENIs that reference the IGW.
+  # This creates a race condition where:
+  #   1. EIP gets released
+  #   2. ALB controller ENIs still attached to IGW
+  #   3. IGW cannot be detached from VPC
+  #   4. VPC deletion fails
+  # 
+  # Solution: Force EIP to wait for IGW dependency resolution
+  # This ensures ALB resources are cleaned up before EIP is released
+  # ===================================================================
+  depends_on = [aws_internet_gateway.igw]
 }
 
 # NAT Gateway

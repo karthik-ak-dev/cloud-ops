@@ -1,6 +1,6 @@
 # Client-specific configuration
 project_name = "dev-client-name"  # Replace client-name with your client name
-region       = "us-east-1"
+region       = "eu-west-3"
 vpc_cidr     = "10.0.0.0/16"
 
 # Feature flags

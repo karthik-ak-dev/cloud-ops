@@ -287,12 +287,6 @@ variable "create_access_keys" {
   default     = true
 }
 
-variable "environment" {
-  description = "Environment name (used for resource naming and tagging)"
-  type        = string
-  default     = "dev"
-}
-
 variable "enable_cloudflare_ip_restriction" {
   description = "Whether to restrict ALB access to Cloudflare IP ranges only (recommended for production with Cloudflare)"
   type        = bool

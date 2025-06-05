@@ -59,17 +59,17 @@ output "aurora_master_username" {
 # EKS outputs
 output "eks_cluster_endpoint" {
   description = "EKS cluster endpoint"
-  value       = var.deploy_eks ? module.eks[0].cluster_endpoint : null
+  value       = var.deploy_eks ? module.platform.cluster_endpoint : null
 }
 
 output "eks_cluster_name" {
   description = "EKS cluster name"
-  value       = var.deploy_eks ? module.eks[0].cluster_name : null
+  value       = var.deploy_eks ? module.platform.cluster_name : null
 }
 
 output "eks_config_command" {
   description = "Command to configure kubectl"
-  value       = var.deploy_eks ? "aws eks update-kubeconfig --region ${var.region} --name ${module.eks[0].cluster_name}" : "EKS cluster not deployed"
+  value       = var.deploy_eks && module.platform.cluster_name != null ? "aws eks update-kubeconfig --region ${var.region} --name ${module.platform.cluster_name}" : "EKS cluster not deployed"
 }
 
 # CI/CD Outputs
@@ -105,4 +105,24 @@ output "cd_secret_access_key" {
   description = "Secret access key for the CD user"
   value       = module.ci_cd.cd_secret_access_key
   sensitive   = true
+}
+
+output "platform_ready" {
+  description = "Indicates if the complete platform is ready for application deployment"
+  value       = var.deploy_eks ? module.platform.platform_ready : false
+}
+
+output "alb_controller_deployed" {
+  description = "Whether ALB controller was deployed"
+  value       = var.deploy_eks ? module.platform.alb_controller_deployed : false
+}
+
+output "alb_controller_helm_status" {
+  description = "Status of ALB controller Helm release"
+  value       = var.deploy_eks ? module.platform.alb_controller_helm_status : null
+}
+
+output "alb_security_group_id" {
+  description = "ID of the ALB security group (use in ingress annotations)"
+  value       = var.deploy_eks ? module.platform.alb_security_group_id : null
 } 
