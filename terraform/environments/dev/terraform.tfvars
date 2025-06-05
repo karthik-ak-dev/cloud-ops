@@ -4,10 +4,10 @@ region       = "eu-west-3"
 vpc_cidr     = "10.0.0.0/16"
 
 # Feature flags
-deploy_aurora = true  # Set to false to skip Aurora PostgreSQL deployment
-deploy_aurora_srvless = true  # Set to false to skip Aurora PostgreSQL Serverless deployment
-deploy_redis = true   # Set to false to skip Redis ElastiCache deployment
-deploy_valkey_srvless = true  # Set to false to skip Valkey Serverless deployment
+deploy_aurora = false  # Set to false to skip Aurora PostgreSQL deployment
+deploy_aurora_srvless = false  # Set to false to skip Aurora PostgreSQL Serverless deployment
+deploy_redis = false   # Set to false to skip Redis ElastiCache deployment
+deploy_valkey_srvless = false  # Set to false to skip Valkey Serverless deployment
 deploy_ecr = true     # Set to false to skip ECR repositories deployment
 deploy_eks = true     # Set to false to skip EKS cluster deployment
 deploy_alb_controller = true  # Set to false to skip ALB controller deployment
