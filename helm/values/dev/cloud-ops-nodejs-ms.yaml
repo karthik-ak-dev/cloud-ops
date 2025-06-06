@@ -28,7 +28,7 @@ ingress:
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     # Use ALB security group created by ALB controller module
-    alb.ingress.kubernetes.io/security-groups: "sg-00ea0de692fc221e3"
+    alb.ingress.kubernetes.io/security-groups: "sg-0d244a234c0ea54c5"
   hosts:
     # No host restriction - accepts any hostname (including ALB's direct DNS)
     - paths:
