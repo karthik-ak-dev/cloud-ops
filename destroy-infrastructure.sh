@@ -20,14 +20,10 @@
 # - Proper AWS permissions (EKS, EC2, ELB, RDS, IAM)
 #
 # USAGE:
-#   chmod +x destroy-infrastructure.sh
-#   ./destroy-infrastructure.sh dev
-#   ./destroy-infrastructure.sh prod
+#   ./destroy-infrastructure.sh [ENVIRONMENT] [REGION] [CLIENT_NAME]
 #
-# CONFIGURATION:
-#   CLIENT_NAME=mycompany ./destroy-infrastructure.sh dev
-#   AWS_REGION=eu-west-3 ./destroy-infrastructure.sh prod
-#   CLUSTER_NAME=custom-cluster-name ./destroy-infrastructure.sh dev
+# EXAMPLE:
+#   ./destroy-infrastructure.sh dev us-east-1 mycompany
 #
 # TROUBLESHOOTING:
 # If destroy fails:
@@ -37,13 +33,29 @@
 #
 # ==============================================================================
 
+# chmod +x destroy-infrastructure.sh
+# ./destroy-infrastructure.sh dev eu-west-3 dev-client-name
+
 set -e
+
+# Show help if requested
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Infrastructure Destruction Script"
+    echo ""
+    echo "USAGE:"
+    echo "  ./destroy-infrastructure.sh [ENVIRONMENT] [REGION] [CLIENT_NAME]"
+    echo ""
+    echo "EXAMPLE:"
+    echo "  ./destroy-infrastructure.sh dev us-east-1 mycompany"
+    echo ""
+    exit 0
+fi
 
 # Configuration
 ENVIRONMENT="${1:-dev}"
-REGION="${AWS_REGION:-us-east-1}"
-CLIENT_NAME="${CLIENT_NAME:-dev-client-name}"
-CLUSTER_NAME="${CLUSTER_NAME:-${CLIENT_NAME}-eks-cluster}"
+REGION="${2:-us-east-1}"
+CLIENT_NAME="${3:-dev-client-name}"
+CLUSTER_NAME="${CLIENT_NAME}-eks-cluster"
 
 echo "🚀 Infrastructure Destruction: $ENVIRONMENT"
 echo "============================================"
